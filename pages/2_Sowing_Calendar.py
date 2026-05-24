@@ -5,10 +5,12 @@ from __future__ import annotations
 import streamlit as st
 
 from agri.geo import Place
+from agri.i18n import crop_name, language_selector
 from agri.recommend import load_crops, monthly_suitability_matrix
 from agri.viz import suitability_heatmap
 
 st.set_page_config(page_title="Sowing Calendar · KrishiCast", page_icon="📅", layout="wide")
+language_selector()
 st.title("📅 Sowing Calendar")
 st.markdown(
     "How well does each crop fit each month at **your** location? "
@@ -42,6 +44,7 @@ df = df[df["category"].isin(chosen_cats)]
 month_cols = [c for c in df.columns if c not in {"crop_id", "name_en", "category"}]
 df["best"] = df[month_cols].max(axis=1)
 df = df[df["best"] >= min_score].drop(columns=["best"]).sort_values("name_en")
+df["name_en"] = df.apply(lambda row: crop_name(crop_meta[row["crop_id"]]), axis=1)
 
 if df.empty:
     st.info("No crops match the current filters.")
