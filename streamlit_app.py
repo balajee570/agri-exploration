@@ -11,13 +11,13 @@ from streamlit_folium import st_folium
 
 from agri.geo import Place, place_from_coords, search_india
 from agri.gibs import LAYERS, best_recent_day
-from agri.i18n import crop_name, language_selector
+from agri.i18n import crop_name, current_lang, language_selector
 from agri.recommend import (
     crops_by_id,
     income_estimate_inr_per_acre,
     rank_for_date,
 )
-from agri.season import SEASON_LABELS, current_season
+from agri.season import SEASON_LABELS, SEASON_LABELS_HI, current_season
 from agri.soil import current_soil_profile, root_zone_moisture_pct, root_zone_temp_c
 from agri.viz import (
     forecast_temperature_chart,
@@ -99,9 +99,10 @@ def _conditions_strip(place: Place, forecast: dict) -> None:
     cols[5].metric("Rainfall (30 d)", f"{rain_30:.0f} mm" if pd.notna(rain_30) else "—")
 
     season = current_season(date.today())
+    _slabels = SEASON_LABELS_HI if current_lang() == "hi" else SEASON_LABELS
     st.caption(
         f"📅 Today: **{date.today().strftime('%a, %d %b %Y')}** · "
-        f"Season: **{SEASON_LABELS[season]}** · "
+        f"Season: **{_slabels[season]}** · "
         f"All readings live from Open-Meteo, no API key. "
         f"Forecast: ECMWF/GFS blend. Soil: land-surface model."
     )

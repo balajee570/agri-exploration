@@ -11,8 +11,10 @@ from streamlit_folium import st_folium
 
 from agri.geo import Place, place_from_coords
 from agri.gibs import LAYERS, best_recent_day
+from agri.i18n import language_selector
 
 st.set_page_config(page_title="Satellite View · KrishiCast", page_icon="🛰️", layout="wide")
+language_selector()
 st.title("🛰️ Satellite View")
 st.markdown(
     "All layers come from **NASA EOSDIS GIBS** — public, key-free, updated daily. "

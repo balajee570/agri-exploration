@@ -25,6 +25,13 @@ SEASON_LABELS = {
     "perennial": "Perennial",
 }
 
+SEASON_LABELS_HI = {
+    "kharif": "खरीफ (जून-अक्टूबर)",
+    "rabi": "रबी (अक्टूबर-मार्च)",
+    "zaid": "जायद (मार्च-जून)",
+    "perennial": "बारहमासी",
+}
+
 
 def months_match_season(months: list[int], season: str) -> bool:
     for m in months:
