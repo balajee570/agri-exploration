@@ -9,7 +9,7 @@ import streamlit as st
 from folium.plugins import Draw, MeasureControl
 from streamlit_folium import st_folium
 
-from agri.geo import Place
+from agri.geo import Place, place_from_coords
 from agri.gibs import LAYERS, best_recent_day
 
 st.set_page_config(page_title="Satellite View · KrishiCast", page_icon="🛰️", layout="wide")
@@ -96,7 +96,19 @@ with c2:
     ).add_to(fmap)
     MeasureControl(primary_length_unit="meters", primary_area_unit="hectares").add_to(fmap)
     folium.LayerControl(collapsed=False).add_to(fmap)
-    drawn = st_folium(fmap, height=620, use_container_width=True, returned_objects=["all_drawings"])
+    drawn = st_folium(
+        fmap,
+        height=620,
+        use_container_width=True,
+        returned_objects=["all_drawings", "last_clicked"],
+        key="sat_view_map",
+    )
+    clicked = (drawn or {}).get("last_clicked")
+    if clicked and clicked.get("lat") is not None and clicked.get("lng") is not None:
+        new_lat, new_lng = float(clicked["lat"]), float(clicked["lng"])
+        if abs(new_lat - place.lat) > 1e-4 or abs(new_lng - place.lng) > 1e-4:
+            st.session_state.place = place_from_coords(new_lat, new_lng)
+            st.rerun()
 
 st.divider()
 st.markdown("#### Drawn area")

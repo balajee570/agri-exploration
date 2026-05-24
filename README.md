@@ -6,7 +6,7 @@ KrishiCast tells you *which crop to sow, when to sow it, and how much water you'
 
 ## What it does
 
-- **Pan-India location** — GPS, search (any town/village/district), or click-on-map.
+- **Pan-India location** — search (any town/village/district) or click anywhere on the satellite map to drop a pin.
 - **Live conditions** — temperature, humidity, wind, multi-depth soil moisture & temperature, last-30-day & 12-month rainfall.
 - **Ranked crop recommendations** — ~60 Indian crops (cereals, pulses, oilseeds, vegetables, fruits, spices, fibre, fodder) scored by a transparent fit engine. Tap to see the per-component breakdown.
 - **Sowing-window planner** — "sow now" vs "+2 / +4 / +6 / +8 weeks" tabs.
@@ -44,7 +44,10 @@ pytest tests/
 1. Push this repo to GitHub (`balajee570/agri-exploration`).
 2. Go to https://share.streamlit.io → "New app".
 3. Select the repo, branch, and `streamlit_app.py` as the entrypoint.
-4. Deploy. Subsequent pushes auto-redeploy.
+4. In **Advanced settings**, select **Python 3.11** (authoritative — `.python-version` is a hint that the builder may not always honor).
+5. Deploy. Subsequent pushes auto-redeploy.
+
+Dependencies are hard-pinned to versions with prebuilt wheels for Python 3.11–3.14, so the build avoids any source compiles. `packages.txt` ships native build headers (`zlib1g-dev`, `libjpeg-dev`, etc.) as a safety net.
 
 ## Architecture
 
