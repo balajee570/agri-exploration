@@ -8,6 +8,7 @@ import pandas as pd
 import streamlit as st
 
 from agri.geo import Place
+from agri.i18n import crop_name, language_selector
 from agri.recommend import (
     build_inputs_for_window,
     crops_by_id,
@@ -19,6 +20,7 @@ from agri.viz import compare_radar
 from agri.weather import fetch_climate_normals, fetch_forecast
 
 st.set_page_config(page_title="Compare Crops · KrishiCast", page_icon="⚖️", layout="wide")
+language_selector()
 st.title("⚖️ Compare crops")
 st.markdown("Pick up to 4 crops and we'll score them side-by-side for your location & sowing date.")
 
@@ -37,7 +39,7 @@ picked_ids = st.multiselect(
     options=[c["id"] for c in crops],
     default=["paddy", "maize_kharif", "soybean", "pigeon_pea"],
     max_selections=4,
-    format_func=lambda i: next(c["name_en"] for c in crops if c["id"] == i),
+    format_func=lambda i: crop_name(next(c for c in crops if c["id"] == i)),
 )
 
 if not picked_ids:
@@ -57,12 +59,12 @@ with st.spinner("Scoring…"):
         result = score_crop(crop, inputs)
         lo, hi = income_estimate_inr_per_acre(crop)
         cards.append((crop, result, (lo, hi), gd))
-        radar_data[crop["name_en"]] = result.components
+        radar_data[crop_name(crop)] = result.components
 
 cols = st.columns(len(cards))
 for col, (crop, res, (lo, hi), gd) in zip(cols, cards):
     with col.container(border=True):
-        st.markdown(f"### {crop['name_en']}")
+        st.markdown(f"### {crop_name(crop)}")
         st.markdown(
             f"<div style='font-size:2.4rem;font-weight:700;color:#2E7D32;line-height:1;'>"
             f"{res.score:.0f}<span style='font-size:1rem;'> / 100</span></div>",
@@ -89,7 +91,7 @@ detail_rows = []
 for crop, res, (lo, hi), gd in cards:
     detail_rows.append(
         {
-            "Crop": crop["name_en"],
+            "Crop": crop_name(crop),
             "Fit score": res.score,
             "Days to harvest": gd,
             "Temp range (°C)": f"{crop['temp_c']['min']}–{crop['temp_c']['max']}",

@@ -11,6 +11,7 @@ from streamlit_folium import st_folium
 
 from agri.geo import Place, place_from_coords, search_india
 from agri.gibs import LAYERS, best_recent_day
+from agri.i18n import crop_name, language_selector
 from agri.recommend import (
     crops_by_id,
     income_estimate_inr_per_acre,
@@ -125,7 +126,7 @@ def _recommendation_panel(place: Place, sowing_date: date, forecast: dict, norma
             badge = "🟢" if res.score >= 65 else "🟡" if res.score >= 45 else "🔴"
             lo, hi = income_estimate_inr_per_acre(crop)
             with col.container(border=True):
-                st.markdown(f"#### {badge} {crop['name_en']}")
+                st.markdown(f"#### {badge} {crop_name(crop)}")
                 st.markdown(
                     f"<div style='font-size:2.1rem;font-weight:700;color:#2E7D32;line-height:1;'>"
                     f"{res.score:.0f}<span style='font-size:1rem;'> / 100</span></div>",
@@ -215,6 +216,7 @@ def _mini_map(place: Place) -> None:
 
 def main() -> None:
     _init_state()
+    language_selector()
     st.title("🌾 KrishiCast")
     st.markdown(
         "Pan-India crop recommendations powered by **live weather, multi-depth soil moisture, "

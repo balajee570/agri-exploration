@@ -6,11 +6,13 @@ import pandas as pd
 import streamlit as st
 
 from agri.geo import Place
+from agri.i18n import crop_name, language_selector
 from agri.recommend import load_crops
 from agri.viz import water_budget_chart
 from agri.water import irrigation_need_mm, water_budget_series
 
 st.set_page_config(page_title="Water Budget · KrishiCast", page_icon="💧", layout="wide")
+language_selector()
 st.title("💧 Water Budget")
 st.markdown(
     "Daily rainfall in, evapotranspiration out — and the resulting balance. "
@@ -59,7 +61,7 @@ ids = st.multiselect(
     "Pick crops you're considering",
     options=[c["id"] for c in crops],
     default=["paddy", "wheat", "maize_kharif", "chickpea", "tomato"],
-    format_func=lambda i: next(c["name_en"] for c in crops if c["id"] == i),
+    format_func=lambda i: crop_name(next(c for c in crops if c["id"] == i)),
 )
 
 rows = []
@@ -74,7 +76,7 @@ for cid in ids:
     )
     rows.append(
         {
-            "Crop": crop["name_en"],
+            "Crop": crop_name(crop),
             "Days": gd,
             "Rain expected (mm)": res["rain_mm"],
             "Crop water demand (mm)": res["demand_mm"],
