@@ -54,16 +54,12 @@ def _init_state() -> None:
 
 def _location_strip() -> Place:
     st.markdown("### 📍 Where is your farm?")
-    c_search, c_gps = st.columns([4, 1])
-    with c_search:
-        q = st.text_input(
-            "Search any town, district or village in India",
-            key="search_input",
-            placeholder="Patna, Hoshangabad, Anantapur, Tezpur…",
-            label_visibility="collapsed",
-        )
-    with c_gps:
-        gps_clicked = st.button("📡 Use my GPS", use_container_width=True)
+    q = st.text_input(
+        "Search any town, district or village in India",
+        key="search_input",
+        placeholder="Patna, Hoshangabad village, Anantapur, Tezpur… (or click the map below)",
+        label_visibility="collapsed",
+    )
 
     if q:
         results = search_india(q, limit=6)
@@ -74,23 +70,15 @@ def _location_strip() -> Place:
             if st.button("Use this location", type="primary"):
                 st.session_state.place = picked
                 st.rerun()
-
-    if gps_clicked:
-        try:
-            from streamlit_geolocation import streamlit_geolocation
-
-            loc = streamlit_geolocation()
-            if loc and loc.get("latitude") and loc.get("longitude"):
-                st.session_state.place = place_from_coords(loc["latitude"], loc["longitude"])
-                st.rerun()
-        except Exception as exc:  # noqa: BLE001
-            st.warning(f"GPS unavailable: {exc}. Use search instead.")
+        else:
+            st.caption("No match. Try a nearby larger town.")
 
     place: Place = st.session_state.place
     sub = f"**{place.label}** · {place.lat:.4f}°, {place.lng:.4f}°"
     if place.elevation_m:
         sub += f" · {place.elevation_m:.0f} m"
     st.caption(sub)
+    st.caption("💡 Tip: click anywhere on the satellite map below to drop a pin on that location.")
     return place
 
 
@@ -205,10 +193,23 @@ def _mini_map(place: Place) -> None:
         icon=folium.Icon(color="green", icon="leaf", prefix="fa"),
     ).add_to(fmap)
     folium.LayerControl(collapsed=False).add_to(fmap)
-    st_folium(fmap, height=380, use_container_width=True, returned_objects=[])
+    out = st_folium(
+        fmap,
+        height=380,
+        use_container_width=True,
+        returned_objects=["last_clicked"],
+        key="home_mini_map",
+    )
+    clicked = (out or {}).get("last_clicked")
+    if clicked and clicked.get("lat") is not None and clicked.get("lng") is not None:
+        new_lat, new_lng = float(clicked["lat"]), float(clicked["lng"])
+        moved = abs(new_lat - place.lat) > 1e-4 or abs(new_lng - place.lng) > 1e-4
+        if moved:
+            st.session_state.place = place_from_coords(new_lat, new_lng)
+            st.rerun()
     st.caption(
-        "Tiles from NASA EOSDIS GIBS (no key). Toggle NDVI to see vegetation health. "
-        "Use the **Satellite View** page for full layer controls and farm-boundary drawing."
+        "Tiles from NASA EOSDIS GIBS (no key). Click anywhere to move your farm pin. "
+        "Toggle NDVI to see vegetation health. Use the **Satellite View** page for full layer controls and farm-boundary drawing."
     )
 
 
