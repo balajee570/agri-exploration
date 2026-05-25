@@ -12,11 +12,13 @@ from streamlit_folium import st_folium
 from agri.geo import Place, place_from_coords, search_india
 from agri.gibs import LAYERS, best_recent_day
 from agri.i18n import crop_name, current_lang, language_selector
+from agri.market_signals import fetch_all as fetch_market_signals
 from agri.recommend import (
     crops_by_id,
     income_estimate_inr_per_acre,
     rank_for_date,
 )
+from agri.regional_priors import rerank as regional_rerank
 from agri.season import SEASON_LABELS, SEASON_LABELS_HI, current_season
 from agri.soil import current_soil_profile, root_zone_moisture_pct, root_zone_temp_c
 from agri.suitability import excluded_for_location
@@ -128,20 +130,45 @@ def _recommendation_panel(place: Place, sowing_date: date, forecast: dict, norma
         st.warning("Could not score crops — live data unavailable. Try again in a few seconds.")
         return
 
+    season = current_season(sowing_date)
+    climate_pairs = [(r.crop_id, r.score) for r in results]
+    regional = regional_rerank(
+        state=place.state, district=place.district,
+        sowing_date=sowing_date, season=season,
+        climate_ranked=climate_pairs,
+    )
+
+    def _combined(res) -> float:
+        r = regional.get(res.crop_id)
+        return r.score if r else res.score
+
+    if regional:
+        results = sorted(results, key=_combined, reverse=True)
+        st.caption(
+            f"🧠 Re-ranked for **{place.district or place.state}** using regional cropping priors "
+            f"(Sarvam-105B). Climate score and regional score shown side-by-side."
+        )
+
     chunks = [results[i : i + 3] for i in range(0, len(results), 3)]
     for chunk in chunks:
         cols = st.columns(len(chunk))
         for col, res in zip(cols, chunk):
             crop = crops[res.crop_id]
-            badge = "🟢" if res.score >= 65 else "🟡" if res.score >= 45 else "🔴"
+            reg = regional.get(res.crop_id)
+            display_score = reg.score if reg else res.score
+            badge = "🟢" if display_score >= 65 else "🟡" if display_score >= 45 else "🔴"
             lo, hi = income_estimate_inr_per_acre(crop)
             with col.container(border=True):
                 st.markdown(f"#### {badge} {crop_name(crop)}")
                 st.markdown(
                     f"<div style='font-size:2.1rem;font-weight:700;color:#2E7D32;line-height:1;'>"
-                    f"{res.score:.0f}<span style='font-size:1rem;'> / 100</span></div>",
+                    f"{display_score:.0f}<span style='font-size:1rem;'> / 100</span></div>",
                     unsafe_allow_html=True,
                 )
+                if reg:
+                    st.caption(f"Climate **{res.score:.0f}** · Regional **{reg.score:.0f}**")
+                    if reg.reason:
+                        st.caption(f"🌱 _{reg.reason}_")
                 st.caption(
                     f"{crop['category'].title()} · "
                     f"{int(sum(crop['growing_days'])/2)} days to harvest · "
@@ -166,6 +193,23 @@ def _recommendation_panel(place: Place, sowing_date: date, forecast: dict, norma
         with st.expander(f"ℹ️ {len(excluded)} crops not suitable for this region"):
             for crop, reason in excluded:
                 st.caption(f"• **{crop_name(crop)}** — {reason}")
+
+    _market_panel(place, season, [r.crop_id for r in results[:3]])
+
+
+def _market_panel(place: Place, season: str, top_crop_ids: list[str]) -> None:
+    signals = fetch_market_signals(place.state, season, top_crop_ids)
+    if not signals["mandi"] and not signals["pest"]:
+        return
+    with st.expander("📈 Live market signals & pest alerts (via Tavily)"):
+        if signals["mandi"]:
+            st.markdown("**Mandi prices & demand**")
+            for s in signals["mandi"]:
+                st.caption(f"• [{s.title}]({s.url}) — {s.snippet}")
+        if signals["pest"]:
+            st.markdown("**Pest & disease advisories**")
+            for s in signals["pest"]:
+                st.caption(f"• [{s.title}]({s.url}) — {s.snippet}")
 
 
 def _share_panel(place: Place, sowing_date: date, forecast: dict, normals: pd.DataFrame) -> None:

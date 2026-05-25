@@ -6,4 +6,6 @@ pandas
 numpy
 pillow
 httpx
+requests
+tavily-python
 python-dateutil
