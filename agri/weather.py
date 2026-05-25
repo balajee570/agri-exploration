@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import time
 from datetime import date, timedelta
+from threading import Lock
 from typing import Any
 
 import httpx
@@ -10,6 +12,56 @@ import pandas as pd
 
 from agri.cache import TTL_ARCHIVE, TTL_CLIMATE, TTL_FORECAST, cached
 
+
+_STALE_CACHE: dict[str, tuple[float, Any]] = {}
+_STALE_LOCK = Lock()
+_STALE_MAX_AGE_S = 6 * 60 * 60  # serve up to 6 h stale when the API is down/rate-limited
+_BACKOFF_S = (1.0, 2.0, 4.0)
+
+
+class WeatherUnavailable(RuntimeError):
+    """Raised when Open-Meteo is unreachable AND no stale value is available."""
+
+
+def _stale_key(url: str, params: dict[str, Any]) -> str:
+    return url + "?" + "&".join(f"{k}={v}" for k, v in sorted(params.items()))
+
+
+def _get_with_retry_and_stale(
+    url: str, params: dict[str, Any], timeout: float = 20.0,
+) -> dict[str, Any]:
+    """GET with 429/5xx retry + backoff; fall back to last-good cached value on hard failure."""
+    key = _stale_key(url, params)
+    last_exc: Exception | None = None
+    for attempt, sleep_s in enumerate((*_BACKOFF_S, None)):
+        try:
+            resp = httpx.get(url, params=params, timeout=timeout)
+            if resp.status_code == 429 or resp.status_code >= 500:
+                last_exc = httpx.HTTPStatusError(
+                    f"{resp.status_code} from Open-Meteo", request=resp.request, response=resp,
+                )
+                if sleep_s is None:
+                    break
+                time.sleep(sleep_s)
+                continue
+            resp.raise_for_status()
+            data = resp.json()
+        except httpx.HTTPError as exc:
+            last_exc = exc
+            if sleep_s is None:
+                break
+            time.sleep(sleep_s)
+            continue
+        with _STALE_LOCK:
+            _STALE_CACHE[key] = (time.time(), data)
+        return data
+
+    with _STALE_LOCK:
+        cached_entry = _STALE_CACHE.get(key)
+    if cached_entry and time.time() - cached_entry[0] < _STALE_MAX_AGE_S:
+        return cached_entry[1]
+
+    raise WeatherUnavailable("Open-Meteo rate-limited or unreachable") from last_exc
 _FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
 _ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
 _CLIMATE_URL = "https://climate-api.open-meteo.com/v1/climate"
@@ -62,9 +114,7 @@ def fetch_forecast(lat: float, lng: float) -> dict[str, Any]:
             ]
         ),
     }
-    resp = httpx.get(_FORECAST_URL, params=params, timeout=20.0)
-    resp.raise_for_status()
-    return resp.json()
+    return _get_with_retry_and_stale(_FORECAST_URL, params, timeout=20.0)
 
 
 @cached(TTL_ARCHIVE)
@@ -80,9 +130,11 @@ def fetch_archive_year(lat: float, lng: float, end: date | None = None) -> pd.Da
         "daily": "precipitation_sum,temperature_2m_max,temperature_2m_min",
         "timezone": "auto",
     }
-    resp = httpx.get(_ARCHIVE_URL, params=params, timeout=30.0)
-    resp.raise_for_status()
-    daily = resp.json().get("daily", {})
+    try:
+        data = _get_with_retry_and_stale(_ARCHIVE_URL, params, timeout=30.0)
+    except WeatherUnavailable:
+        return pd.DataFrame()
+    daily = data.get("daily", {})
     df = pd.DataFrame(daily)
     if not df.empty:
         df["time"] = pd.to_datetime(df["time"])
@@ -102,22 +154,21 @@ def fetch_climate_normals(lat: float, lng: float) -> pd.DataFrame:
         "timezone": "auto",
     }
     try:
-        resp = httpx.get(_CLIMATE_URL, params=params, timeout=30.0)
-        resp.raise_for_status()
-        daily = resp.json().get("daily", {})
-        df = pd.DataFrame(daily)
-        if df.empty:
-            return df
-        df["time"] = pd.to_datetime(df["time"])
-        df["month"] = df["time"].dt.month
-        normals = df.groupby("month").agg(
-            temp_mean_c=("temperature_2m_mean", "mean"),
-            precip_mm=("precipitation_sum", "sum"),
-        )
-        normals["precip_mm"] = normals["precip_mm"] / 30
-        return normals.reset_index()
-    except httpx.HTTPError:
+        data = _get_with_retry_and_stale(_CLIMATE_URL, params, timeout=30.0)
+    except WeatherUnavailable:
         return pd.DataFrame()
+    daily = data.get("daily", {})
+    df = pd.DataFrame(daily)
+    if df.empty:
+        return df
+    df["time"] = pd.to_datetime(df["time"])
+    df["month"] = df["time"].dt.month
+    normals = df.groupby("month").agg(
+        temp_mean_c=("temperature_2m_mean", "mean"),
+        precip_mm=("precipitation_sum", "sum"),
+    )
+    normals["precip_mm"] = normals["precip_mm"] / 30
+    return normals.reset_index()
 
 
 def daily_forecast_df(forecast_json: dict[str, Any]) -> pd.DataFrame:

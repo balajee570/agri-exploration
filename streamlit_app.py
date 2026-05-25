@@ -352,8 +352,14 @@ def main() -> None:
 
     try:
         forecast = fetch_forecast(place.lat, place.lng)
-    except Exception as exc:  # noqa: BLE001
-        st.error(f"Live weather temporarily unavailable: {exc}")
+    except Exception:  # noqa: BLE001
+        st.error(
+            "⏳ **Live weather is rate-limited right now.** "
+            "Open-Meteo's free tier is shared across all users of the app — "
+            "this usually clears in a minute or two. Try refreshing the page, "
+            "or pin a location you (or someone else) already viewed recently — "
+            "those are served from cache."
+        )
         return
     normals = fetch_climate_normals(place.lat, place.lng)
 
