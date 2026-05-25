@@ -15,10 +15,10 @@ from agri.terrain import terrain_summary
 
 
 def annual_rainfall_mm(normals: pd.DataFrame) -> float | None:
-    """Sum of monthly daily-avg precip × 30 ≈ annual total."""
+    """Sum of the 12 monthly totals = annual rainfall in mm."""
     if normals is None or normals.empty or "precip_mm" not in normals.columns:
         return None
-    return float(normals["precip_mm"].sum() * 30.0)
+    return float(normals["precip_mm"].sum())
 
 
 def annual_mean_temp_c(normals: pd.DataFrame) -> float | None:
