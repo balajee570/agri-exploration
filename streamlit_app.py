@@ -148,6 +148,11 @@ def _recommendation_panel(place: Place, sowing_date: date, forecast: dict, norma
             f"🧠 Re-ranked for **{place.district or place.state}** using regional cropping priors "
             f"(Sarvam-105B). Climate score and regional score shown side-by-side."
         )
+    else:
+        st.caption(
+            "ℹ️ _Showing climate-only ranking — AI regional rerank unavailable. "
+            "Configure `SARVAM_API_KEY` in Streamlit secrets to enable AI farming intelligence._"
+        )
 
     chunks = [results[i : i + 3] for i in range(0, len(results), 3)]
     for chunk in chunks:
@@ -194,23 +199,89 @@ def _recommendation_panel(place: Place, sowing_date: date, forecast: dict, norma
             for crop, reason in excluded:
                 st.caption(f"• **{crop_name(crop)}** — {reason}")
 
-    _market_panel(place, season, [r.crop_id for r in results[:3]])
+    top_crops_payload = _build_crop_payload(results[:3], regional, crops)
+    counter_crops_payload = _build_counter_payload(results, regional, crops)
+    _market_panel(
+        place=place, season=season, sowing_date=sowing_date,
+        top_crops=top_crops_payload, counter_crops=counter_crops_payload,
+        regional_active=bool(regional),
+    )
 
 
-def _market_panel(place: Place, season: str, top_crop_ids: list[str]) -> None:
-    bundle = fetch_market_signals(place.state, season, top_crop_ids)
+def _build_crop_payload(results, regional, crops) -> list[dict]:
+    """Convert top FitResults into the dict shape the synthesis prompt expects."""
+    out = []
+    for r in results:
+        crop = crops.get(r.crop_id, {})
+        reg = regional.get(r.crop_id) if regional else None
+        out.append({
+            "id": r.crop_id,
+            "name": crop.get("name_en", r.crop_id),
+            "climate": r.score,
+            "regional": reg.score if reg else None,
+            "reason": reg.reason if reg else "",
+        })
+    return out
+
+
+def _build_counter_payload(results, regional, crops) -> list[dict]:
+    """Climate-high but AI-low (delta ≥ 30) crops outside the displayed top 3.
+
+    These get the explicit ❌ counter-narrative section in the AI summary —
+    the explanation a farmer needs for why NOT to follow the climate-only
+    suggestion (Cotton in Bihar being the canonical example).
+    """
+    if not regional:
+        return []
+    top_3_ids = {r.crop_id for r in results[:3]}
+    climate_high = sorted(results, key=lambda r: r.score, reverse=True)
+    out: list[dict] = []
+    for r in climate_high:
+        if r.crop_id in top_3_ids:
+            continue
+        reg = regional.get(r.crop_id)
+        if not reg:
+            continue
+        if r.score - reg.score < 30:  # only flag significant disagreements
+            continue
+        crop = crops.get(r.crop_id, {})
+        out.append({
+            "id": r.crop_id,
+            "name": crop.get("name_en", r.crop_id),
+            "climate": r.score,
+            "regional": reg.score,
+            "reason": reg.reason,
+        })
+        if len(out) >= 3:
+            break
+    return out
+
+
+def _market_panel(
+    place: Place, season: str, sowing_date: date,
+    top_crops: list[dict], counter_crops: list[dict],
+    regional_active: bool,
+) -> None:
+    bundle = fetch_market_signals(place.state, season, sowing_date, top_crops, counter_crops)
     summary = bundle.get("summary_md", "")
     links = bundle.get("links", [])
     if not summary and not links:
         return
-    label = "📈 Market intelligence (AI-synthesized) & marketplaces"
+    label = "🌾 Farming intelligence (AI-synthesized) & marketplaces"
     with st.expander(label, expanded=False):
         if summary:
             st.markdown(summary)
-        else:
+        elif regional_active:
             st.caption(
-                "_Live market summary unavailable for this location — "
+                "_AI farming-intelligence synthesis returned empty — "
                 "showing marketplace directory below._"
+            )
+        else:
+            st.info(
+                "💡 **AI farming intelligence unavailable** — recommendations "
+                "above are climate-only. Configure `SARVAM_API_KEY` in "
+                "Streamlit secrets to enable AI-driven regional reasoning and "
+                "explicit counter-recommendations for poorly-fitting crops."
             )
         if links:
             st.markdown("**🛒 Buy & sell platforms**")

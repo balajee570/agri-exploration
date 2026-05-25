@@ -1,27 +1,30 @@
-"""Live market intelligence — Tavily web search synthesized through Sarvam-105B.
+"""Farming intelligence — AI-synthesized agronomic reasoning + buy/sell links.
 
-Pipeline:
-  1. Tavily fetches raw web-search results for mandi prices + pest advisories
-     (cached 12 h per state/season).
-  2. Sarvam-105B synthesizes those into a concise 3-section Markdown summary:
-     mandi prices, advisories, AI recommendation (with explicit
-     climate-vs-regional disagreements flagged).
-  3. A curated list of universal + state-specific buy/sell marketplaces is
-     appended for the farmer.
+The AI here answers *"what should I grow and why?"* — supported by Tavily
+web-search snippets that provide source backing (ICAR, state agri dept,
+NAFED schemes, Cotton Corporation regional data, etc.). It does NOT surface
+mandi prices: those vary hourly and Tavily snippets are too unreliable for
+price quotation.
 
-Failure modes: any step that returns "" or [] silently drops to the next; the
-UI either renders what it has or hides the panel entirely.
+Two distinct outputs:
+  1. A structured Markdown summary with ✅ "Why grow these crops" and
+     ❌ "Climate suggests but AI advises against" sections — the second
+     section is the explicit counter-narrative for cases where the climate
+     engine ranks a crop high but the AI rerank knows it's a bad regional fit
+     (e.g. Cotton in Bihar).
+  2. A curated list of universal + state-specific marketplaces.
 """
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from datetime import date
 from typing import Any
 
 from agri.cache import cached
 
-_TTL = 12 * 60 * 60  # 12 h
+_TTL = 12 * 60 * 60  # 12 h cache for both Tavily and Sarvam outputs
 
 
 try:
@@ -64,7 +67,7 @@ class Signal:
 class MarketLink:
     name: str
     url: str
-    purpose: str  # "Buy inputs" / "Sell produce" / "Price discovery" / etc.
+    purpose: str
 
 
 def _search(query: str, max_results: int = 4) -> list[Signal]:
@@ -85,74 +88,99 @@ def _search(query: str, max_results: int = 4) -> list[Signal]:
     return out
 
 
-@cached(_TTL)
-def mandi_signals(state: str, today_iso: str, top_crops_csv: str) -> list[dict[str, str]]:
-    if not state or not top_crops_csv:
-        return []
-    q = f"{state} mandi price today {top_crops_csv}"
-    return [s.__dict__ for s in _search(q, max_results=4)]
-
-
-@cached(_TTL)
-def pest_signals(state: str, season: str, today_iso: str) -> list[dict[str, str]]:
-    if not state:
-        return []
-    q = f"{state} {season} crop pest outbreak advisory this week"
-    return [s.__dict__ for s in _search(q, max_results=3)]
-
-
-_SYNTHESIS_SYSTEM = (
-    "You are an agriculture market analyst for Indian farmers. Given raw "
-    "web-search results for mandi prices and pest/disease advisories, plus "
-    "the farmer's top recommended crops, write a CONCISE three-section "
-    "Markdown summary. Use ₹/quintal where prices appear in the source. "
-    "Mention specific mandi names when present in the source data. "
-    "If your domain knowledge contradicts the climate-driven ranking, say so "
-    "explicitly (e.g. 'Cotton scores high on weather but Bihar's procurement "
-    "infrastructure favours Gujarat/Maharashtra — focus on Moong instead'). "
-    "Output ONLY these three sections, in this exact order, nothing else:\n\n"
-    "**📊 Mandi prices**\n[2-3 sentences with actual ₹ values from results]\n\n"
-    "**🛡️ Advisories**\n[2-3 sentences on pests/diseases/weather]\n\n"
-    "**✅ AI recommendation**\n[3-4 sentences justifying the top crops, "
-    "weaving in mandi prices and advisories; flag any climate-vs-regional "
-    "disagreements explicitly]"
+_FARMING_SYSTEM = (
+    "You are an expert in Indian agronomy and regional cropping patterns. "
+    "Given a list of recommended crops for a specific Indian location and "
+    "supporting web-search snippets, write a CONCISE structured farming "
+    "intelligence summary in Markdown. Focus exclusively on agronomic "
+    "reasoning — soil suitability, traditional cropping pattern, pest/"
+    "disease pressure, processing infrastructure (mandis/ginning/cold-chain), "
+    "and government schemes (MSP, PSS, PMFBY). Cite institutions by name "
+    "(ICAR, state agri dept, NAFED, Cotton Corporation, etc.) where they "
+    "appear in the snippets. NEVER invent specific ₹ prices or yield numbers — "
+    "only use what's in the snippets.\n\n"
+    "Output ONLY these two sections, in this exact order, nothing else:\n\n"
+    "**✅ Why grow these crops here**\n"
+    "For each top crop, a 3-4 sentence agronomic paragraph. Format:\n"
+    "1. **{Crop name}** — {reasoning covering soil/season fit, agronomic tips, "
+    "infrastructure/scheme context}\n"
+    "2. **{Crop name}** — {same}\n"
+    "3. **{Crop name}** — {same}\n\n"
+    "**❌ Climate suggests but AI advises against**\n"
+    "For each counter crop listed by the user, write 2-3 sentences explaining "
+    "WHY it's a poor regional fit. Be specific: infrastructure gaps, regional "
+    "disease/pest patterns, capital requirements, alternative regions where it "
+    "thrives. This is critical — the farmer needs an explicit reason NOT to "
+    "follow the climate-based suggestion. Format:\n"
+    "- **{Crop}** (Climate: X · Regional: Y) — {counter reasoning}\n\n"
+    "If the counter-crops list is empty, OMIT the ❌ section entirely."
 )
 
 
-def _format_results(rows: list[dict[str, str]]) -> str:
-    if not rows:
+@cached(_TTL)
+def _farming_background(state: str, season: str, today_iso: str) -> str:
+    """Tavily background — general cropping patterns + agronomic advisories."""
+    if not state:
+        return ""
+    queries = [
+        f"best crops to grow {state} {season} season ICAR recommendations traditional",
+        f"{state} agriculture department crop advisory {season} cropping pattern",
+    ]
+    snippets: list[str] = []
+    seen: set[str] = set()
+    for q in queries:
+        for s in _search(q, max_results=4):
+            line = f"- {s.title}: {s.snippet}"
+            if line not in seen:
+                seen.add(line)
+                snippets.append(line)
+    return "\n".join(snippets[:8])
+
+
+def _format_crops(crops: list[dict[str, Any]]) -> str:
+    if not crops:
         return "(none)"
-    return "\n".join(
-        f"- {r.get('title', '').strip()} — {r.get('snippet', '').strip()}"
-        for r in rows[:5]
-    )
+    lines: list[str] = []
+    for c in crops:
+        parts = [c.get("name", c.get("id", "?")),
+                 f"climate {c.get('climate', 0):.0f}"]
+        if c.get("regional") is not None:
+            parts.append(f"regional {c['regional']:.0f}")
+        line = f"- {parts[0]} ({', '.join(parts[1:])})"
+        if c.get("reason"):
+            line += f" — {c['reason']}"
+        lines.append(line)
+    return "\n".join(lines)
 
 
 @cached(_TTL)
-def synthesize_market_summary(
-    state: str, district: str, season: str,
-    top_crops_csv: str, today_iso: str,
+def synthesize_farming_intelligence(
+    state: str, district: str, season: str, month_name: str,
+    top_crops_json: str, counter_crops_json: str, today_iso: str,
 ) -> str:
-    """Returns a 3-section Markdown summary, or "" on any failure.
+    """Returns Markdown farming-intelligence summary, or "" on any failure.
 
     Cache key includes the day, so summaries refresh daily but a state+crop
     combination only hits Sarvam once per day.
     """
-    if not state or not top_crops_csv:
+    if not state or not top_crops_json:
         return ""
-    mandi = mandi_signals(state, today_iso, top_crops_csv)
-    pest = pest_signals(state, season, today_iso)
-    if not mandi and not pest:
+    top_crops = json.loads(top_crops_json)
+    counter_crops = json.loads(counter_crops_json) if counter_crops_json else []
+    if not top_crops:
         return ""
+
+    background = _farming_background(state, season, today_iso)
     prompt = (
         f"Location: {district or state}, {state}\n"
-        f"Sowing season: {season}\n"
-        f"Top recommended crops: {top_crops_csv}\n\n"
-        f"Mandi search results:\n{_format_results(mandi)}\n\n"
-        f"Pest/advisory search results:\n{_format_results(pest)}"
+        f"Sowing month: {month_name} ({season} season)\n\n"
+        f"Top recommended crops (AI-reranked):\n{_format_crops(top_crops)}\n\n"
+        f"Climate engine top picks NOT in AI top 3 — write counter-recommendations "
+        f"for these:\n{_format_crops(counter_crops)}\n\n"
+        f"Background context from web search:\n{background or '(none — rely on your own knowledge)'}"
     )
     from agri.ai_client import call_ai
-    return call_ai(prompt, system=_SYNTHESIS_SYSTEM, max_tokens=2048)
+    return call_ai(prompt, system=_FARMING_SYSTEM, max_tokens=3500)
 
 
 _UNIVERSAL_PLATFORMS: list[MarketLink] = [
@@ -213,7 +241,7 @@ _STATE_PORTALS: dict[str, MarketLink] = {
 
 
 def buy_sell_links(state: str | None) -> list[MarketLink]:
-    """Return state-specific portal (if any) plus universal platforms."""
+    """State-specific portal first (if any), then universal platforms."""
     links: list[MarketLink] = []
     if state and state in _STATE_PORTALS:
         links.append(_STATE_PORTALS[state])
@@ -221,16 +249,24 @@ def buy_sell_links(state: str | None) -> list[MarketLink]:
     return links
 
 
-def fetch_all(state: str | None, season: str, top_crop_ids: list[str]) -> dict[str, Any]:
+def fetch_all(
+    state: str | None, season: str, sowing_date: date,
+    top_crops: list[dict[str, Any]], counter_crops: list[dict[str, Any]],
+) -> dict[str, Any]:
     """One-shot helper for the UI.
 
     Returns {"summary_md": str, "links": list[MarketLink]}.
-    summary_md may be "" if Tavily/Sarvam are unavailable;
-    links is always non-empty (universal platforms always returned).
+    summary_md may be "" if Sarvam is unavailable;
+    links is always populated (universal platforms always returned).
     """
     today_iso = date.today().isoformat()
-    top_csv = ", ".join(top_crop_ids[:3])
     summary = ""
-    if state:
-        summary = synthesize_market_summary(state, state, season, top_csv, today_iso)
+    if state and top_crops:
+        summary = synthesize_farming_intelligence(
+            state=state, district=state, season=season,
+            month_name=sowing_date.strftime("%B"),
+            top_crops_json=json.dumps(top_crops),
+            counter_crops_json=json.dumps(counter_crops or []),
+            today_iso=today_iso,
+        )
     return {"summary_md": summary, "links": buy_sell_links(state)}
