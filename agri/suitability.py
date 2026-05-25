@@ -28,21 +28,31 @@ def annual_mean_temp_c(normals: pd.DataFrame) -> float | None:
 
 
 def geographic_fit(
-    crop: dict[str, Any], elevation_m: float | None, normals: pd.DataFrame | None
+    crop: dict[str, Any],
+    elevation_m: float | None,
+    normals: pd.DataFrame | None,
+    slope_pct: float | None = None,
 ) -> tuple[float, str]:
     """Returns (fit, reason). fit < 0.1 means exclude from recommendations.
 
-    Checks only the envelopes the crop actually declares. Generous buffers
-    (elev ±200 m, rain ×0.5/×2, temp ±5-8 °C) prevent false exclusions on borderline plots.
+    Hard envelopes the crop declares: elevation_m, slope_max_pct, annual_rain_mm,
+    temp_c.min/max. Buffers (elev ±100 m, rain ×0.5/×2, temp ±5-8 °C) absorb
+    borderline plots without letting catastrophic mismatches through (paddy at
+    1,470 m, cotton on a 29 % slope).
     """
     if elevation_m is not None:
         env = crop.get("elevation_m")
         if env and isinstance(env, list) and len(env) == 2:
             lo, hi = env
-            if elevation_m < lo - 200:
+            if elevation_m < lo - 100:
                 return 0.0, f"needs elevation ≥{lo} m, here {elevation_m:.0f} m"
-            if elevation_m > hi + 200:
+            if elevation_m > hi + 100:
                 return 0.0, f"needs elevation ≤{hi} m, here {elevation_m:.0f} m"
+
+    if slope_pct is not None:
+        smax = crop.get("slope_max_pct")
+        if smax is not None and slope_pct > smax:
+            return 0.0, f"slope {slope_pct:.0f}% exceeds crop max {smax}%"
 
     annual_rain = annual_rainfall_mm(normals)
     if annual_rain is not None:
@@ -68,16 +78,24 @@ def geographic_fit(
 
 
 def excluded_for_location(
-    lat: float, lng: float, normals: pd.DataFrame | None, elevation_m: float | None = None
+    lat: float,
+    lng: float,
+    normals: pd.DataFrame | None,
+    elevation_m: float | None = None,
+    slope_pct: float | None = None,
 ) -> list[tuple[dict[str, Any], str]]:
     """List of (crop, reason) for crops that fail the hard geographic filter at this point."""
     from agri.recommend import load_crops  # lazy: avoids circular import
 
-    if elevation_m is None:
-        elevation_m = terrain_summary(lat, lng).get("elevation_m")
+    if elevation_m is None or slope_pct is None:
+        terr = terrain_summary(lat, lng)
+        if elevation_m is None:
+            elevation_m = terr.get("elevation_m")
+        if slope_pct is None:
+            slope_pct = terr.get("slope_pct")
     out: list[tuple[dict[str, Any], str]] = []
     for crop in load_crops():
-        fit, reason = geographic_fit(crop, elevation_m, normals)
+        fit, reason = geographic_fit(crop, elevation_m, normals, slope_pct=slope_pct)
         if fit < 0.1:
             out.append((crop, reason))
     return out

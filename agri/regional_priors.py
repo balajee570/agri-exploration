@@ -32,26 +32,42 @@ class RegionalRank:
 
 _SYSTEM = (
     "You are an expert in Indian agriculture, specifically regional cropping "
-    "patterns at the district level. Given climate-suitable crops, you re-rank "
-    "by REGIONAL appropriateness for a specific Indian district: traditional "
-    "cropping pattern, soil prevalence, mandi access, pest pressure, and "
-    "commercial viability for small farmers. Respond ONLY with valid JSON. "
-    "No prose outside the JSON. Be concise — your token budget is tight."
+    "patterns at the district level AND microclimate effects of elevation and "
+    "slope. Given climate-suitable crops, you re-rank by REGIONAL appropriateness "
+    "for a specific point: traditional cropping pattern, soil prevalence, mandi "
+    "access, pest pressure, commercial viability, AND the supplied terrain. At "
+    "high elevation (>1000 m) or steep slope (>20%), plantation/highland crops "
+    "(tea, coffee, cardamom, pepper, cool-season vegetables) must outrank lowland "
+    "traditional crops of the same state. Respond ONLY with valid JSON. No prose "
+    "outside the JSON. Be concise — your token budget is tight."
 )
 
 
 def _build_prompt(
     state: str, district: str, month_name: str, season: str,
     climate_ranked: list[tuple[str, float]],
+    elevation_m: float | None = None,
+    slope_pct: float | None = None,
 ) -> str:
     items = "\n".join(f"- {cid} (climate {score:.0f})" for cid, score in climate_ranked)
+    terrain_line = ""
+    bits: list[str] = []
+    if elevation_m is not None:
+        bits.append(f"elevation {elevation_m:.0f} m")
+    if slope_pct is not None:
+        bits.append(f"slope {slope_pct:.0f}%")
+    if bits:
+        terrain_line = f"Terrain: {', '.join(bits)}\n"
     return (
-        f"District: {district}\nState: {state}\nSowing month: {month_name}\n"
-        f"Season: {season}\n\nClimate-suitable crops:\n{items}\n\n"
-        "Re-rank by regional fit for THIS district. For each crop output a "
-        "0-100 regional score and a 5-15 word reason. Crops weakly grown here "
-        "should score low (e.g. cotton in Bihar → 25). Crops central to local "
-        "tradition score high (e.g. paddy in Bihar → 95). Use this exact JSON:\n"
+        f"District: {district}\nState: {state}\n{terrain_line}"
+        f"Sowing month: {month_name}\nSeason: {season}\n\n"
+        f"Climate-suitable crops:\n{items}\n\n"
+        "Re-rank by regional fit for THIS exact point (use the terrain line — a "
+        "Munnar farmer at 1500 m gets different ranking than a Kuttanad farmer at "
+        "5 m even though both are Kerala). For each crop output a 0-100 regional "
+        "score and a 5-15 word reason. Crops weakly grown here score low "
+        "(e.g. cotton in Bihar → 25). Crops central to local tradition score high "
+        "(e.g. paddy in Bihar → 95). Use this exact JSON:\n"
         '{"ranked":[{"id":"<crop_id>","score":<0-100>,"why":"<reason>"}]}'
     )
 
@@ -88,10 +104,21 @@ def _crop_set_hash(crop_ids: list[str]) -> str:
 def _cached_rerank(
     state: str, district: str, iso_year_week: str, season: str,
     month_name: str, crop_set_key: str, crop_list_payload: str,
+    elev_bucket: str, slope_bucket: str,
 ) -> dict[str, dict[str, Any]]:
-    """Cache hits on (state, ISO-week, crop_set). Returns a plain dict for hashing."""
+    """Cache hits on (state, ISO-week, crop_set, elev_bucket, slope_bucket).
+
+    Munnar (1470 m / 29 % slope) and lowland Kerala (50 m / 1 % slope) bucket
+    separately so the AI rerank doesn't reuse a stale lowland answer for a
+    highland point in the same state/district.
+    """
     climate_ranked = json.loads(crop_list_payload)
-    prompt = _build_prompt(state, district, month_name, season, climate_ranked)
+    elev_m = float(elev_bucket) if elev_bucket else None
+    slope_v = float(slope_bucket) if slope_bucket else None
+    prompt = _build_prompt(
+        state, district, month_name, season, climate_ranked,
+        elevation_m=elev_m, slope_pct=slope_v,
+    )
     raw = call_ai(prompt, system=_SYSTEM, max_tokens=2048)
     parsed = _parse(raw)
     return {cid: {"score": r.score, "reason": r.reason} for cid, r in parsed.items()}
@@ -100,6 +127,8 @@ def _cached_rerank(
 def rerank(
     state: str | None, district: str | None, sowing_date: date, season: str,
     climate_ranked: list[tuple[str, float]],
+    elevation_m: float | None = None,
+    slope_pct: float | None = None,
 ) -> dict[str, RegionalRank]:
     """Top-level: takes climate top-N as (crop_id, climate_score). Returns regional rankings."""
     if not state or not climate_ranked:
@@ -109,6 +138,12 @@ def rerank(
     crop_ids = [cid for cid, _ in climate_ranked]
     key = _crop_set_hash(crop_ids)
     payload = json.dumps(climate_ranked)
+    elev_bucket = ""
+    slope_bucket = ""
+    if elevation_m is not None:
+        elev_bucket = str(round(elevation_m / 200.0) * 200)
+    if slope_pct is not None:
+        slope_bucket = str(round(slope_pct / 5.0) * 5)
     raw = _cached_rerank(
         state=state,
         district=district or state,
@@ -117,5 +152,7 @@ def rerank(
         month_name=sowing_date.strftime("%B"),
         crop_set_key=key,
         crop_list_payload=payload,
+        elev_bucket=elev_bucket,
+        slope_bucket=slope_bucket,
     )
     return {cid: RegionalRank(cid, v["score"], v["reason"]) for cid, v in raw.items()}

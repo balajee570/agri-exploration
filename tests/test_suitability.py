@@ -67,15 +67,46 @@ def test_tea_passes_in_mirik_realistic():
 
 
 def test_crop_without_envelope_always_passes():
-    wheat = crops_by_id()["wheat"]
+    """Fail-safe: a crop record missing elevation_m / slope_max_pct must not be filtered."""
+    bare_crop = {"id": "synthetic", "name_en": "Synthetic", "temp_c": {}}
     extreme = _normals(annual_mean_temp_c=10.0, annual_rain_mm=50)
-    fit, _ = geographic_fit(wheat, elevation_m=2000, normals=extreme)
+    fit, _ = geographic_fit(bare_crop, elevation_m=2000, normals=extreme, slope_pct=45)
     assert fit == 1.0
 
 
 def test_missing_normals_does_not_exclude():
     paddy = crops_by_id()["paddy"]
     fit, _ = geographic_fit(paddy, elevation_m=100, normals=pd.DataFrame())
+    assert fit == 1.0
+
+
+def test_paddy_excluded_on_steep_slope():
+    """Munnar regression: paddy on a 29% slope must be excluded even within elevation range."""
+    paddy = crops_by_id()["paddy"]
+    fit, reason = geographic_fit(paddy, elevation_m=500, normals=None, slope_pct=29)
+    assert fit == 0.0
+    assert "slope" in reason.lower()
+
+
+def test_tea_passes_on_steep_highland_slope():
+    """Tea plantations on 40% slope must NOT be excluded (slope_max_pct ≥ 40)."""
+    tea = crops_by_id()["tea"]
+    fit, reason = geographic_fit(tea, elevation_m=1500, normals=None, slope_pct=40)
+    assert fit == 1.0, f"tea should tolerate steep highland slope, got: {reason}"
+
+
+def test_cotton_excluded_at_munnar():
+    """Canonical failing case: cotton at Munnar (1470 m, 29 % slope) must be excluded."""
+    cotton = crops_by_id()["cotton"]
+    fit, reason = geographic_fit(cotton, elevation_m=1470, normals=None, slope_pct=29)
+    assert fit == 0.0
+    assert "elevation" in reason.lower() or "slope" in reason.lower()
+
+
+def test_slope_check_skipped_when_slope_is_none():
+    """Backwards-compat: calling without slope_pct keeps old behaviour."""
+    paddy = crops_by_id()["paddy"]
+    fit, _ = geographic_fit(paddy, elevation_m=500, normals=None)
     assert fit == 1.0
 
 

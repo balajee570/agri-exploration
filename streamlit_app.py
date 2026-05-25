@@ -224,10 +224,13 @@ def _build_counter_payload(results, regional, crops) -> list[dict]:
 def _market_panel(place: Place, sowing_date: date, results: list) -> None:
     crops = crops_by_id()
     season = current_season(sowing_date)
+    terr = terrain_summary(place.lat, place.lng)
     regional = regional_rerank(
         state=place.state, district=place.district,
         sowing_date=sowing_date, season=season,
         climate_ranked=[(r.crop_id, r.score) for r in results],
+        elevation_m=terr.get("elevation_m"),
+        slope_pct=terr.get("slope_pct"),
     )
     top_crops_payload = _build_crop_payload(results[:3], regional, crops)
     counter_crops_payload = _build_counter_payload(results, regional, crops)
