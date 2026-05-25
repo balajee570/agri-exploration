@@ -102,7 +102,8 @@ def rank_for_date(
     forecast_json: dict | None = None,
     normals: pd.DataFrame | None = None,
 ) -> list[FitResult]:
-    forecast_json = forecast_json or fetch_forecast(lat, lng)
+    if forecast_json is None:
+        forecast_json = fetch_forecast(lat, lng)
     if normals is None:
         normals = fetch_climate_normals(lat, lng)
     elev = terrain_summary(lat, lng).get("elevation_m")
@@ -149,7 +150,8 @@ def monthly_suitability_matrix(
     normals: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
     """12-month suitability heatmap data (rows=crops, cols=months)."""
-    forecast_json = forecast_json or fetch_forecast(lat, lng)
+    if forecast_json is None:
+        forecast_json = fetch_forecast(lat, lng)
     if normals is None:
         normals = fetch_climate_normals(lat, lng)
     elev = terrain_summary(lat, lng).get("elevation_m")
