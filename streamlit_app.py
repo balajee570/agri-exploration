@@ -370,19 +370,22 @@ def main() -> None:
 
     try:
         forecast = fetch_forecast(place.lat, place.lng)
+        live_ok = True
     except Exception:  # noqa: BLE001
-        st.error(
-            "⏳ **Live weather is rate-limited right now.** "
-            "Open-Meteo's free tier is shared across all users of the app — "
-            "this usually clears in a minute or two. Try refreshing the page, "
-            "or pin a location you (or someone else) already viewed recently — "
-            "those are served from cache."
+        forecast = {}
+        live_ok = False
+        st.warning(
+            "⏳ **Live weather is rate-limited — running on climate normals only.** "
+            "Open-Meteo's free tier is shared across all users of the app. "
+            "Crop recommendations below are based on 30-year climate normals + "
+            "ERA5 archive (no live forecast or soil moisture). Refresh in a minute "
+            "or two for the full live experience."
         )
-        return
     normals = fetch_climate_normals(place.lat, place.lng)
 
-    st.divider()
-    _conditions_strip(place, forecast)
+    if live_ok:
+        st.divider()
+        _conditions_strip(place, forecast)
 
     st.divider()
     left, right = st.columns([3, 2])
@@ -390,8 +393,9 @@ def main() -> None:
         _recommendation_panel(place, sowing_date, forecast, normals)
     with right:
         _mini_map(place)
-        st.markdown("#### Soil profile (live)")
-        st.plotly_chart(soil_moisture_profile(current_soil_profile(forecast)), use_container_width=True)
+        if live_ok:
+            st.markdown("#### Soil profile (live)")
+            st.plotly_chart(soil_moisture_profile(current_soil_profile(forecast)), use_container_width=True)
 
     st.divider()
     _share_panel(place, sowing_date, forecast, normals)
@@ -399,13 +403,14 @@ def main() -> None:
     st.divider()
     _later_windows(place, forecast, normals)
 
-    st.divider()
-    st.markdown("### 📈 Weather forecast — next 14 days")
-    daily = daily_forecast_df(forecast)
-    if not daily.empty:
-        c1, c2 = st.columns(2)
-        c1.plotly_chart(forecast_temperature_chart(daily), use_container_width=True)
-        c2.plotly_chart(rainfall_bar_chart(daily), use_container_width=True)
+    if live_ok:
+        st.divider()
+        st.markdown("### 📈 Weather forecast — next 14 days")
+        daily = daily_forecast_df(forecast)
+        if not daily.empty:
+            c1, c2 = st.columns(2)
+            c1.plotly_chart(forecast_temperature_chart(daily), use_container_width=True)
+            c2.plotly_chart(rainfall_bar_chart(daily), use_container_width=True)
 
     st.divider()
     st.markdown("### 📜 Last 12 months — what actually fell here")
