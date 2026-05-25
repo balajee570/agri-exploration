@@ -106,11 +106,13 @@ def rank_for_date(
         forecast_json = fetch_forecast(lat, lng)
     if normals is None:
         normals = fetch_climate_normals(lat, lng)
-    elev = terrain_summary(lat, lng).get("elevation_m")
+    terr = terrain_summary(lat, lng)
+    elev = terr.get("elevation_m")
+    slope = terr.get("slope_pct")
     crops = load_crops()
     results: list[FitResult] = []
     for crop in crops:
-        if geographic_fit(crop, elev, normals)[0] < 0.1:
+        if geographic_fit(crop, elev, normals, slope_pct=slope)[0] < 0.1:
             continue
         gd = int(sum(crop["growing_days"]) / 2)
         inputs = build_inputs_for_window(lat, lng, sowing_date, gd, forecast_json, normals)
@@ -154,7 +156,9 @@ def monthly_suitability_matrix(
         forecast_json = fetch_forecast(lat, lng)
     if normals is None:
         normals = fetch_climate_normals(lat, lng)
-    elev = terrain_summary(lat, lng).get("elevation_m")
+    terr = terrain_summary(lat, lng)
+    elev = terr.get("elevation_m")
+    slope = terr.get("slope_pct")
     crops = load_crops()
     today = date.today()
     months: list[date] = []
@@ -163,7 +167,7 @@ def monthly_suitability_matrix(
         months.append(d)
     rows = []
     for crop in crops:
-        if geographic_fit(crop, elev, normals)[0] < 0.1:
+        if geographic_fit(crop, elev, normals, slope_pct=slope)[0] < 0.1:
             continue
         gd = int(sum(crop["growing_days"]) / 2)
         row: dict[str, Any] = {"crop_id": crop["id"], "name_en": crop["name_en"]}

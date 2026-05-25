@@ -10,7 +10,7 @@
     "temp_c": {"min": 18, "opt_lo": 22, "opt_hi": 32, "max": 38},
     "germination_temp_min_c": 20,
     "water_need_mm": [900, 2500],
-    "elevation_m": [0, 1500],
+    "elevation_m": [0, 1200],
     "annual_rain_mm": [800, 4000],
     "soil_moisture_pref": "high",
     "soil_ph": [5.5, 7.5],
@@ -18,7 +18,8 @@
     "drought_tolerance": "low",
     "yield_q_per_acre": [16, 28],
     "price_inr_per_q": [2000, 2300],
-    "notes": "MSP-backed. Transplanted variety needs standing water."
+    "notes": "MSP-backed. Transplanted variety needs standing water.",
+    "slope_max_pct": 5
   },
   {
     "id": "paddy_boro",
@@ -31,7 +32,7 @@
     "temp_c": {"min": 14, "opt_lo": 20, "opt_hi": 30, "max": 36},
     "germination_temp_min_c": 18,
     "water_need_mm": [1200, 2000],
-    "elevation_m": [0, 1500],
+    "elevation_m": [0, 800],
     "annual_rain_mm": [800, 4000],
     "soil_moisture_pref": "high",
     "soil_ph": [5.5, 7.5],
@@ -39,7 +40,8 @@
     "drought_tolerance": "low",
     "yield_q_per_acre": [20, 32],
     "price_inr_per_q": [2000, 2300],
-    "notes": "Common in Bihar, West Bengal, Assam. Heavy irrigation required."
+    "notes": "Common in Bihar, West Bengal, Assam. Heavy irrigation required.",
+    "slope_max_pct": 5
   },
   {
     "id": "wheat",
@@ -58,7 +60,9 @@
     "drought_tolerance": "medium",
     "yield_q_per_acre": [15, 25],
     "price_inr_per_q": [2200, 2400],
-    "notes": "MSP-backed. Cool, dry climate; sensitive to terminal heat."
+    "notes": "MSP-backed. Cool, dry climate; sensitive to terminal heat.",
+    "elevation_m": [0, 2500],
+    "slope_max_pct": 15
   },
   {
     "id": "maize_kharif",
@@ -77,7 +81,9 @@
     "drought_tolerance": "medium",
     "yield_q_per_acre": [18, 32],
     "price_inr_per_q": [1900, 2200],
-    "notes": "Hybrid varieties yield well. Sensitive to waterlogging."
+    "notes": "Hybrid varieties yield well. Sensitive to waterlogging.",
+    "elevation_m": [0, 2500],
+    "slope_max_pct": 25
   },
   {
     "id": "maize_rabi",
@@ -96,7 +102,9 @@
     "drought_tolerance": "medium",
     "yield_q_per_acre": [25, 45],
     "price_inr_per_q": [1900, 2200],
-    "notes": "Higher yield than Kharif; better grain quality."
+    "notes": "Higher yield than Kharif; better grain quality.",
+    "elevation_m": [0, 2500],
+    "slope_max_pct": 25
   },
   {
     "id": "sorghum",
@@ -115,7 +123,9 @@
     "drought_tolerance": "high",
     "yield_q_per_acre": [8, 16],
     "price_inr_per_q": [2700, 3200],
-    "notes": "Highly drought tolerant. Good for dryland farming."
+    "notes": "Highly drought tolerant. Good for dryland farming.",
+    "elevation_m": [0, 1500],
+    "slope_max_pct": 15
   },
   {
     "id": "pearl_millet",
@@ -134,7 +144,9 @@
     "drought_tolerance": "very_high",
     "yield_q_per_acre": [8, 14],
     "price_inr_per_q": [2300, 2600],
-    "notes": "Best for arid zones, low rainfall (300-500 mm)."
+    "notes": "Best for arid zones, low rainfall (300-500 mm).",
+    "elevation_m": [0, 1500],
+    "slope_max_pct": 20
   },
   {
     "id": "finger_millet",
@@ -153,7 +165,9 @@
     "drought_tolerance": "high",
     "yield_q_per_acre": [10, 16],
     "price_inr_per_q": [3300, 3800],
-    "notes": "Nutri-cereal; premium market. Strong in Karnataka."
+    "notes": "Nutri-cereal; premium market. Strong in Karnataka.",
+    "elevation_m": [0, 2300],
+    "slope_max_pct": 30
   },
   {
     "id": "barley",
@@ -172,7 +186,9 @@
     "drought_tolerance": "high",
     "yield_q_per_acre": [12, 20],
     "price_inr_per_q": [1700, 2000],
-    "notes": "Tolerates saline/alkaline soils better than wheat."
+    "notes": "Tolerates saline/alkaline soils better than wheat.",
+    "elevation_m": [0, 4000],
+    "slope_max_pct": 25
   },
   {
     "id": "chickpea",
@@ -191,7 +207,9 @@
     "drought_tolerance": "high",
     "yield_q_per_acre": [6, 12],
     "price_inr_per_q": [5400, 6000],
-    "notes": "MSP-backed. Fixes nitrogen; great rotation crop."
+    "notes": "MSP-backed. Fixes nitrogen; great rotation crop.",
+    "elevation_m": [0, 2200],
+    "slope_max_pct": 15
   },
   {
     "id": "pigeon_pea",
@@ -210,7 +228,9 @@
     "drought_tolerance": "high",
     "yield_q_per_acre": [5, 10],
     "price_inr_per_q": [6600, 7200],
-    "notes": "MSP-backed. Long duration; intercrop-friendly."
+    "notes": "MSP-backed. Long duration; intercrop-friendly.",
+    "elevation_m": [0, 1800],
+    "slope_max_pct": 20
   },
   {
     "id": "green_gram",
@@ -229,7 +249,9 @@
     "drought_tolerance": "medium",
     "yield_q_per_acre": [4, 7],
     "price_inr_per_q": [7800, 8600],
-    "notes": "Short duration; ideal for catch crop / summer."
+    "notes": "Short duration; ideal for catch crop / summer.",
+    "elevation_m": [0, 1800],
+    "slope_max_pct": 15
   },
   {
     "id": "black_gram",
@@ -248,7 +270,9 @@
     "drought_tolerance": "medium",
     "yield_q_per_acre": [4, 7],
     "price_inr_per_q": [6900, 7500],
-    "notes": "MSP-backed. Sensitive to waterlogging."
+    "notes": "MSP-backed. Sensitive to waterlogging.",
+    "elevation_m": [0, 1800],
+    "slope_max_pct": 15
   },
   {
     "id": "lentil",
@@ -267,7 +291,9 @@
     "drought_tolerance": "high",
     "yield_q_per_acre": [5, 9],
     "price_inr_per_q": [6400, 7000],
-    "notes": "MSP-backed. Big in Bihar, UP, MP."
+    "notes": "MSP-backed. Big in Bihar, UP, MP.",
+    "elevation_m": [0, 3500],
+    "slope_max_pct": 15
   },
   {
     "id": "field_pea",
@@ -286,7 +312,9 @@
     "drought_tolerance": "medium",
     "yield_q_per_acre": [6, 12],
     "price_inr_per_q": [3500, 4500],
-    "notes": "Cool climate; nitrogen fixer."
+    "notes": "Cool climate; nitrogen fixer.",
+    "elevation_m": [0, 3000],
+    "slope_max_pct": 20
   },
   {
     "id": "soybean",
@@ -305,7 +333,9 @@
     "drought_tolerance": "medium",
     "yield_q_per_acre": [8, 14],
     "price_inr_per_q": [4500, 5000],
-    "notes": "MSP-backed. Dominant in MP, Maharashtra."
+    "notes": "MSP-backed. Dominant in MP, Maharashtra.",
+    "elevation_m": [0, 1500],
+    "slope_max_pct": 12
   },
   {
     "id": "groundnut",
@@ -324,7 +354,9 @@
     "drought_tolerance": "medium",
     "yield_q_per_acre": [10, 16],
     "price_inr_per_q": [6300, 6900],
-    "notes": "MSP-backed. Needs well-drained sandy loam."
+    "notes": "MSP-backed. Needs well-drained sandy loam.",
+    "elevation_m": [0, 1500],
+    "slope_max_pct": 12
   },
   {
     "id": "mustard",
@@ -343,7 +375,9 @@
     "drought_tolerance": "high",
     "yield_q_per_acre": [6, 12],
     "price_inr_per_q": [5500, 6000],
-    "notes": "MSP-backed. Cool, dry winter needed."
+    "notes": "MSP-backed. Cool, dry winter needed.",
+    "elevation_m": [0, 2500],
+    "slope_max_pct": 15
   },
   {
     "id": "sesame",
@@ -362,7 +396,9 @@
     "drought_tolerance": "high",
     "yield_q_per_acre": [2, 5],
     "price_inr_per_q": [8800, 10500],
-    "notes": "MSP-backed. High-value oilseed."
+    "notes": "MSP-backed. High-value oilseed.",
+    "elevation_m": [0, 1500],
+    "slope_max_pct": 15
   },
   {
     "id": "sunflower",
@@ -381,7 +417,9 @@
     "drought_tolerance": "medium",
     "yield_q_per_acre": [6, 12],
     "price_inr_per_q": [6700, 7300],
-    "notes": "Photoperiod-insensitive; flexible sowing."
+    "notes": "Photoperiod-insensitive; flexible sowing.",
+    "elevation_m": [0, 2000],
+    "slope_max_pct": 12
   },
   {
     "id": "safflower",
@@ -400,7 +438,9 @@
     "drought_tolerance": "high",
     "yield_q_per_acre": [4, 8],
     "price_inr_per_q": [5800, 6500],
-    "notes": "Dryland Maharashtra/Karnataka."
+    "notes": "Dryland Maharashtra/Karnataka.",
+    "elevation_m": [0, 1500],
+    "slope_max_pct": 15
   },
   {
     "id": "linseed",
@@ -419,7 +459,9 @@
     "drought_tolerance": "high",
     "yield_q_per_acre": [4, 8],
     "price_inr_per_q": [5800, 6500],
-    "notes": "Dual-purpose: oil + fibre. Cool climate."
+    "notes": "Dual-purpose: oil + fibre. Cool climate.",
+    "elevation_m": [0, 2500],
+    "slope_max_pct": 15
   },
   {
     "id": "cotton",
@@ -438,7 +480,9 @@
     "drought_tolerance": "medium",
     "yield_q_per_acre": [6, 14],
     "price_inr_per_q": [7000, 7700],
-    "notes": "MSP-backed. Bt cotton dominant."
+    "notes": "MSP-backed. Bt cotton dominant.",
+    "elevation_m": [0, 800],
+    "slope_max_pct": 8
   },
   {
     "id": "jute",
@@ -457,7 +501,9 @@
     "drought_tolerance": "low",
     "yield_q_per_acre": [10, 18],
     "price_inr_per_q": [5300, 5800],
-    "notes": "MSP-backed. West Bengal, Assam, Bihar."
+    "notes": "MSP-backed. West Bengal, Assam, Bihar.",
+    "elevation_m": [0, 600],
+    "slope_max_pct": 5
   },
   {
     "id": "sugarcane",
@@ -476,7 +522,9 @@
     "drought_tolerance": "low",
     "yield_q_per_acre": [280, 400],
     "price_inr_per_q": [340, 380],
-    "notes": "FRP-backed (~₹340/q). High water demand."
+    "notes": "FRP-backed (~₹340/q). High water demand.",
+    "elevation_m": [0, 1500],
+    "slope_max_pct": 8
   },
   {
     "id": "potato",
@@ -495,7 +543,9 @@
     "drought_tolerance": "low",
     "yield_q_per_acre": [80, 140],
     "price_inr_per_q": [800, 1800],
-    "notes": "Cold-storage dependent for marketing."
+    "notes": "Cold-storage dependent for marketing.",
+    "elevation_m": [0, 3000],
+    "slope_max_pct": 35
   },
   {
     "id": "onion_rabi",
@@ -514,7 +564,9 @@
     "drought_tolerance": "medium",
     "yield_q_per_acre": [80, 140],
     "price_inr_per_q": [1200, 2500],
-    "notes": "Storage-friendly variety; Maharashtra leader."
+    "notes": "Storage-friendly variety; Maharashtra leader.",
+    "elevation_m": [0, 1800],
+    "slope_max_pct": 15
   },
   {
     "id": "onion_kharif",
@@ -533,7 +585,9 @@
     "drought_tolerance": "low",
     "yield_q_per_acre": [60, 110],
     "price_inr_per_q": [1500, 3500],
-    "notes": "Higher prices but poorer storage life."
+    "notes": "Higher prices but poorer storage life.",
+    "elevation_m": [0, 1800],
+    "slope_max_pct": 15
   },
   {
     "id": "tomato",
@@ -552,7 +606,9 @@
     "drought_tolerance": "low",
     "yield_q_per_acre": [120, 240],
     "price_inr_per_q": [800, 4000],
-    "notes": "Highly volatile prices."
+    "notes": "Highly volatile prices.",
+    "elevation_m": [0, 2000],
+    "slope_max_pct": 20
   },
   {
     "id": "brinjal",
@@ -571,7 +627,9 @@
     "drought_tolerance": "medium",
     "yield_q_per_acre": [120, 200],
     "price_inr_per_q": [800, 2000],
-    "notes": "Year-round demand."
+    "notes": "Year-round demand.",
+    "elevation_m": [0, 1500],
+    "slope_max_pct": 15
   },
   {
     "id": "okra",
@@ -590,7 +648,9 @@
     "drought_tolerance": "medium",
     "yield_q_per_acre": [50, 90],
     "price_inr_per_q": [1500, 3000],
-    "notes": "Quick cash crop."
+    "notes": "Quick cash crop.",
+    "elevation_m": [0, 1500],
+    "slope_max_pct": 15
   },
   {
     "id": "cabbage",
@@ -609,7 +669,9 @@
     "drought_tolerance": "low",
     "yield_q_per_acre": [100, 160],
     "price_inr_per_q": [600, 1500],
-    "notes": "Cool-season crop."
+    "notes": "Cool-season crop.",
+    "elevation_m": [0, 2700],
+    "slope_max_pct": 35
   },
   {
     "id": "cauliflower",
@@ -628,7 +690,9 @@
     "drought_tolerance": "low",
     "yield_q_per_acre": [80, 140],
     "price_inr_per_q": [800, 2000],
-    "notes": "Cool climate critical for curd quality."
+    "notes": "Cool climate critical for curd quality.",
+    "elevation_m": [0, 2700],
+    "slope_max_pct": 35
   },
   {
     "id": "chilli",
@@ -647,7 +711,9 @@
     "drought_tolerance": "medium",
     "yield_q_per_acre": [30, 80],
     "price_inr_per_q": [8000, 18000],
-    "notes": "Dry chilli storable; high-value."
+    "notes": "Dry chilli storable; high-value.",
+    "elevation_m": [0, 2000],
+    "slope_max_pct": 20
   },
   {
     "id": "turmeric",
@@ -666,7 +732,9 @@
     "drought_tolerance": "low",
     "yield_q_per_acre": [80, 140],
     "price_inr_per_q": [8000, 14000],
-    "notes": "Long duration; rhizome crop."
+    "notes": "Long duration; rhizome crop.",
+    "elevation_m": [0, 1500],
+    "slope_max_pct": 20
   },
   {
     "id": "ginger",
@@ -685,7 +753,9 @@
     "drought_tolerance": "low",
     "yield_q_per_acre": [60, 100],
     "price_inr_per_q": [6000, 18000],
-    "notes": "Partial shade tolerant."
+    "notes": "Partial shade tolerant.",
+    "elevation_m": [0, 1500],
+    "slope_max_pct": 25
   },
   {
     "id": "coriander",
@@ -704,7 +774,9 @@
     "drought_tolerance": "medium",
     "yield_q_per_acre": [4, 8],
     "price_inr_per_q": [7000, 12000],
-    "notes": "Cool climate; major in Rajasthan, Gujarat."
+    "notes": "Cool climate; major in Rajasthan, Gujarat.",
+    "elevation_m": [0, 2200],
+    "slope_max_pct": 15
   },
   {
     "id": "cumin",
@@ -723,7 +795,9 @@
     "drought_tolerance": "high",
     "yield_q_per_acre": [3, 6],
     "price_inr_per_q": [25000, 60000],
-    "notes": "High-value spice. Rajasthan, Gujarat."
+    "notes": "High-value spice. Rajasthan, Gujarat.",
+    "elevation_m": [0, 1800],
+    "slope_max_pct": 15
   },
   {
     "id": "fenugreek",
@@ -742,7 +816,9 @@
     "drought_tolerance": "medium",
     "yield_q_per_acre": [5, 9],
     "price_inr_per_q": [4500, 6500],
-    "notes": "Dual purpose: leafy + seed."
+    "notes": "Dual purpose: leafy + seed.",
+    "elevation_m": [0, 2200],
+    "slope_max_pct": 15
   },
   {
     "id": "garlic",
@@ -761,7 +837,9 @@
     "drought_tolerance": "medium",
     "yield_q_per_acre": [40, 80],
     "price_inr_per_q": [5000, 15000],
-    "notes": "Cold spell during bulb formation helps."
+    "notes": "Cold spell during bulb formation helps.",
+    "elevation_m": [0, 2700],
+    "slope_max_pct": 35
   },
   {
     "id": "mango",
@@ -780,7 +858,9 @@
     "drought_tolerance": "high",
     "yield_q_per_acre": [40, 100],
     "price_inr_per_q": [3000, 12000],
-    "notes": "Perennial; planted in monsoon."
+    "notes": "Perennial; planted in monsoon.",
+    "elevation_m": [0, 1500],
+    "slope_max_pct": 15
   },
   {
     "id": "banana",
@@ -799,7 +879,9 @@
     "drought_tolerance": "low",
     "yield_q_per_acre": [240, 360],
     "price_inr_per_q": [1500, 2800],
-    "notes": "Drip irrigation strongly recommended."
+    "notes": "Drip irrigation strongly recommended.",
+    "elevation_m": [0, 1500],
+    "slope_max_pct": 12
   },
   {
     "id": "papaya",
@@ -818,7 +900,9 @@
     "drought_tolerance": "medium",
     "yield_q_per_acre": [200, 320],
     "price_inr_per_q": [1500, 2800],
-    "notes": "Frost-sensitive; quick-return fruit."
+    "notes": "Frost-sensitive; quick-return fruit.",
+    "elevation_m": [0, 1000],
+    "slope_max_pct": 12
   },
   {
     "id": "guava",
@@ -837,7 +921,9 @@
     "drought_tolerance": "high",
     "yield_q_per_acre": [80, 160],
     "price_inr_per_q": [2000, 4500],
-    "notes": "Hardy; tolerates wide soil range."
+    "notes": "Hardy; tolerates wide soil range.",
+    "elevation_m": [0, 1500],
+    "slope_max_pct": 20
   },
   {
     "id": "citrus",
@@ -856,7 +942,9 @@
     "drought_tolerance": "medium",
     "yield_q_per_acre": [80, 140],
     "price_inr_per_q": [2500, 5000],
-    "notes": "Hot dry climate suits Nagpur orange."
+    "notes": "Hot dry climate suits Nagpur orange.",
+    "elevation_m": [0, 1800],
+    "slope_max_pct": 20
   },
   {
     "id": "pomegranate",
@@ -875,7 +963,9 @@
     "drought_tolerance": "high",
     "yield_q_per_acre": [60, 120],
     "price_inr_per_q": [5000, 12000],
-    "notes": "Hot dry climate ideal."
+    "notes": "Hot dry climate ideal.",
+    "elevation_m": [0, 1800],
+    "slope_max_pct": 20
   },
   {
     "id": "watermelon",
@@ -894,7 +984,9 @@
     "drought_tolerance": "medium",
     "yield_q_per_acre": [120, 200],
     "price_inr_per_q": [600, 1500],
-    "notes": "Summer cash crop."
+    "notes": "Summer cash crop.",
+    "elevation_m": [0, 1500],
+    "slope_max_pct": 12
   },
   {
     "id": "muskmelon",
@@ -913,7 +1005,9 @@
     "drought_tolerance": "medium",
     "yield_q_per_acre": [80, 140],
     "price_inr_per_q": [1500, 3000],
-    "notes": "River-bed cultivation common."
+    "notes": "River-bed cultivation common.",
+    "elevation_m": [0, 1500],
+    "slope_max_pct": 12
   },
   {
     "id": "cucumber",
@@ -932,7 +1026,9 @@
     "drought_tolerance": "medium",
     "yield_q_per_acre": [80, 140],
     "price_inr_per_q": [800, 2000],
-    "notes": "Quick turnover; trellising helps."
+    "notes": "Quick turnover; trellising helps.",
+    "elevation_m": [0, 1500],
+    "slope_max_pct": 15
   },
   {
     "id": "bottle_gourd",
@@ -951,7 +1047,9 @@
     "drought_tolerance": "medium",
     "yield_q_per_acre": [120, 200],
     "price_inr_per_q": [600, 1500],
-    "notes": "Stable demand year-round."
+    "notes": "Stable demand year-round.",
+    "elevation_m": [0, 1500],
+    "slope_max_pct": 12
   },
   {
     "id": "marigold",
@@ -970,7 +1068,9 @@
     "drought_tolerance": "medium",
     "yield_q_per_acre": [50, 90],
     "price_inr_per_q": [3000, 8000],
-    "notes": "Festival-driven demand spikes."
+    "notes": "Festival-driven demand spikes.",
+    "elevation_m": [0, 2000],
+    "slope_max_pct": 20
   },
   {
     "id": "rose",
@@ -989,7 +1089,9 @@
     "drought_tolerance": "medium",
     "yield_q_per_acre": [60, 120],
     "price_inr_per_q": [4000, 10000],
-    "notes": "High-value cut flower; greenhouse-friendly."
+    "notes": "High-value cut flower; greenhouse-friendly.",
+    "elevation_m": [0, 2200],
+    "slope_max_pct": 20
   },
   {
     "id": "jasmine",
@@ -1008,7 +1110,9 @@
     "drought_tolerance": "medium",
     "yield_q_per_acre": [20, 50],
     "price_inr_per_q": [12000, 30000],
-    "notes": "Tamil Nadu, Karnataka leader. High-value."
+    "notes": "Tamil Nadu, Karnataka leader. High-value.",
+    "elevation_m": [0, 1800],
+    "slope_max_pct": 15
   },
   {
     "id": "tea",
@@ -1029,7 +1133,8 @@
     "drought_tolerance": "low",
     "yield_q_per_acre": [12, 25],
     "price_inr_per_q": [15000, 30000],
-    "notes": "Hill regions: Darjeeling, Assam, Nilgiris."
+    "notes": "Hill regions: Darjeeling, Assam, Nilgiris.",
+    "slope_max_pct": 50
   },
   {
     "id": "coffee",
@@ -1050,7 +1155,8 @@
     "drought_tolerance": "medium",
     "yield_q_per_acre": [4, 10],
     "price_inr_per_q": [22000, 40000],
-    "notes": "Shade-grown; Western Ghats."
+    "notes": "Shade-grown; Western Ghats.",
+    "slope_max_pct": 40
   },
   {
     "id": "cardamom",
@@ -1071,7 +1177,8 @@
     "drought_tolerance": "low",
     "yield_q_per_acre": [1, 4],
     "price_inr_per_q": [150000, 250000],
-    "notes": "Very high-value; Kerala, Karnataka hills."
+    "notes": "Very high-value; Kerala, Karnataka hills.",
+    "slope_max_pct": 40
   },
   {
     "id": "tobacco",
@@ -1090,7 +1197,9 @@
     "drought_tolerance": "medium",
     "yield_q_per_acre": [8, 14],
     "price_inr_per_q": [11000, 18000],
-    "notes": "Regulated; Andhra Pradesh, Karnataka."
+    "notes": "Regulated; Andhra Pradesh, Karnataka.",
+    "elevation_m": [0, 1800],
+    "slope_max_pct": 15
   },
   {
     "id": "fodder_maize",
@@ -1109,7 +1218,9 @@
     "drought_tolerance": "medium",
     "yield_q_per_acre": [120, 220],
     "price_inr_per_q": [400, 700],
-    "notes": "Dairy belt staple; short cycle."
+    "notes": "Dairy belt staple; short cycle.",
+    "elevation_m": [0, 2500],
+    "slope_max_pct": 25
   },
   {
     "id": "berseem",
@@ -1128,6 +1239,203 @@
     "drought_tolerance": "low",
     "yield_q_per_acre": [300, 500],
     "price_inr_per_q": [200, 400],
-    "notes": "Multi-cut; nitrogen fixer."
+    "notes": "Multi-cut; nitrogen fixer.",
+    "elevation_m": [0, 2200],
+    "slope_max_pct": 15
+  },
+  {
+    "id": "black_pepper",
+    "name_en": "Black Pepper",
+    "name_hi": "काली मिर्च",
+    "category": "spice",
+    "seasons": ["perennial"],
+    "sowing_months": [5, 6, 7],
+    "growing_days": [1095, 2920],
+    "temp_c": {"min": 10, "opt_lo": 18, "opt_hi": 30, "max": 38},
+    "germination_temp_min_c": 18,
+    "water_need_mm": [1500, 3000],
+    "annual_rain_mm": [1500, 4000],
+    "soil_moisture_pref": "high",
+    "soil_ph": [5.5, 6.5],
+    "soil_types": ["loam", "red_soil"],
+    "drought_tolerance": "low",
+    "yield_q_per_acre": [3, 8],
+    "price_inr_per_q": [40000, 70000],
+    "notes": "Perennial vine grown on shade trees. Kerala, Karnataka Western Ghats.",
+    "elevation_m": [0, 1500],
+    "slope_max_pct": 50
+  },
+  {
+    "id": "nutmeg",
+    "name_en": "Nutmeg",
+    "name_hi": "जायफल",
+    "category": "spice",
+    "seasons": ["perennial"],
+    "sowing_months": [5, 6, 7],
+    "growing_days": [1825, 3650],
+    "temp_c": {"min": 14, "opt_lo": 22, "opt_hi": 30, "max": 35},
+    "germination_temp_min_c": 20,
+    "water_need_mm": [1500, 3000],
+    "annual_rain_mm": [1500, 4000],
+    "soil_moisture_pref": "high",
+    "soil_ph": [5.5, 6.5],
+    "soil_types": ["loam", "red_soil"],
+    "drought_tolerance": "low",
+    "yield_q_per_acre": [1, 3],
+    "price_inr_per_q": [60000, 100000],
+    "notes": "Evergreen tree; humid tropics. Western Ghats.",
+    "elevation_m": [0, 1300],
+    "slope_max_pct": 30
+  },
+  {
+    "id": "clove",
+    "name_en": "Clove",
+    "name_hi": "लौंग",
+    "category": "spice",
+    "seasons": ["perennial"],
+    "sowing_months": [5, 6, 7],
+    "growing_days": [1825, 3650],
+    "temp_c": {"min": 15, "opt_lo": 22, "opt_hi": 30, "max": 35},
+    "germination_temp_min_c": 20,
+    "water_need_mm": [1500, 3000],
+    "annual_rain_mm": [1500, 3500],
+    "soil_moisture_pref": "high",
+    "soil_ph": [5.5, 6.5],
+    "soil_types": ["loam", "red_soil"],
+    "drought_tolerance": "low",
+    "yield_q_per_acre": [1, 2],
+    "price_inr_per_q": [80000, 120000],
+    "notes": "Perennial tree; humid tropical lowlands of Kerala, Tamil Nadu.",
+    "elevation_m": [0, 900],
+    "slope_max_pct": 25
+  },
+  {
+    "id": "cinnamon",
+    "name_en": "Cinnamon",
+    "name_hi": "दालचीनी",
+    "category": "spice",
+    "seasons": ["perennial"],
+    "sowing_months": [5, 6, 7],
+    "growing_days": [730, 2920],
+    "temp_c": {"min": 18, "opt_lo": 22, "opt_hi": 30, "max": 35},
+    "germination_temp_min_c": 20,
+    "water_need_mm": [1500, 3000],
+    "annual_rain_mm": [1500, 4000],
+    "soil_moisture_pref": "high",
+    "soil_ph": [5.5, 6.5],
+    "soil_types": ["loam", "sandy_loam", "red_soil"],
+    "drought_tolerance": "low",
+    "yield_q_per_acre": [2, 5],
+    "price_inr_per_q": [30000, 60000],
+    "notes": "Bark crop; harvested from coppiced trees. Kerala, Karnataka.",
+    "elevation_m": [0, 1500],
+    "slope_max_pct": 30
+  },
+  {
+    "id": "carrot",
+    "name_en": "Carrot",
+    "name_hi": "गाजर",
+    "category": "vegetable",
+    "seasons": ["rabi"],
+    "sowing_months": [9, 10, 11],
+    "growing_days": [80, 110],
+    "temp_c": {"min": 5, "opt_lo": 15, "opt_hi": 22, "max": 28},
+    "germination_temp_min_c": 8,
+    "water_need_mm": [350, 500],
+    "soil_moisture_pref": "medium",
+    "soil_ph": [6.0, 7.0],
+    "soil_types": ["sandy_loam", "loam"],
+    "drought_tolerance": "low",
+    "yield_q_per_acre": [80, 160],
+    "price_inr_per_q": [600, 2000],
+    "notes": "Cool-season root. Hill stations and rabi-belt plains.",
+    "elevation_m": [200, 3000],
+    "slope_max_pct": 30
+  },
+  {
+    "id": "beetroot",
+    "name_en": "Beetroot",
+    "name_hi": "चुकंदर",
+    "category": "vegetable",
+    "seasons": ["rabi"],
+    "sowing_months": [9, 10, 11],
+    "growing_days": [80, 110],
+    "temp_c": {"min": 5, "opt_lo": 15, "opt_hi": 22, "max": 28},
+    "germination_temp_min_c": 8,
+    "water_need_mm": [350, 500],
+    "soil_moisture_pref": "medium",
+    "soil_ph": [6.0, 7.0],
+    "soil_types": ["sandy_loam", "loam"],
+    "drought_tolerance": "low",
+    "yield_q_per_acre": [80, 140],
+    "price_inr_per_q": [800, 2500],
+    "notes": "Cool-season root. Strong in highland markets.",
+    "elevation_m": [200, 3000],
+    "slope_max_pct": 35
+  },
+  {
+    "id": "strawberry",
+    "name_en": "Strawberry",
+    "name_hi": "स्ट्रॉबेरी",
+    "category": "fruit",
+    "seasons": ["rabi"],
+    "sowing_months": [9, 10],
+    "growing_days": [90, 130],
+    "temp_c": {"min": 5, "opt_lo": 15, "opt_hi": 25, "max": 30},
+    "germination_temp_min_c": 10,
+    "water_need_mm": [400, 700],
+    "soil_moisture_pref": "medium",
+    "soil_ph": [5.5, 6.5],
+    "soil_types": ["sandy_loam", "loam"],
+    "drought_tolerance": "low",
+    "yield_q_per_acre": [40, 100],
+    "price_inr_per_q": [8000, 25000],
+    "notes": "High-value highland fruit. Mahabaleshwar, HP, Nilgiris, Munnar.",
+    "elevation_m": [500, 3000],
+    "slope_max_pct": 30
+  },
+  {
+    "id": "passion_fruit",
+    "name_en": "Passion Fruit",
+    "name_hi": "पैशन फ्रूट",
+    "category": "fruit",
+    "seasons": ["perennial"],
+    "sowing_months": [2, 3, 6, 7],
+    "growing_days": [365, 1825],
+    "temp_c": {"min": 12, "opt_lo": 20, "opt_hi": 28, "max": 32},
+    "germination_temp_min_c": 18,
+    "water_need_mm": [800, 1500],
+    "annual_rain_mm": [1000, 2500],
+    "soil_moisture_pref": "medium",
+    "soil_ph": [5.5, 6.5],
+    "soil_types": ["loam", "sandy_loam", "red_soil"],
+    "drought_tolerance": "medium",
+    "yield_q_per_acre": [30, 80],
+    "price_inr_per_q": [4000, 10000],
+    "notes": "Perennial vine; mid-altitude hills, well-drained slopes.",
+    "elevation_m": [400, 2200],
+    "slope_max_pct": 40
+  },
+  {
+    "id": "apple",
+    "name_en": "Apple",
+    "name_hi": "सेब",
+    "category": "fruit",
+    "seasons": ["perennial"],
+    "sowing_months": [12, 1, 2],
+    "growing_days": [1825, 3650],
+    "temp_c": {"min": -5, "opt_lo": 7, "opt_hi": 20, "max": 30},
+    "germination_temp_min_c": 5,
+    "water_need_mm": [1000, 1500],
+    "annual_rain_mm": [1000, 2500],
+    "soil_moisture_pref": "medium",
+    "soil_ph": [5.5, 6.5],
+    "soil_types": ["loam", "sandy_loam"],
+    "drought_tolerance": "low",
+    "yield_q_per_acre": [40, 120],
+    "price_inr_per_q": [4000, 12000],
+    "notes": "Deciduous; needs 1000+ winter chill hours. HP, J&K, Uttarakhand.",
+    "elevation_m": [1500, 2700],
+    "slope_max_pct": 40
   }
 ]
