@@ -40,6 +40,26 @@ def water_fit(available_mm: float, need_lo: float, need_hi: float, irrigation_mm
 
 MOISTURE_TARGETS = {"low": 22.0, "medium": 32.0, "high": 42.0}
 
+WATERLOG_TOLERANCE_SCORE = {"low": 1.0, "medium": 0.6, "high": 0.25, "very_high": 0.0}
+
+_PADDY_IDS = {"paddy", "paddy_boro"}
+_CLAY_SOILS = {"clay", "clay_loam"}
+_SANDY_SOILS = {"sandy", "sandy_loam", "loamy_sand"}
+
+
+def infer_waterlogging_tolerance(crop: dict) -> str:
+    """Heuristic from existing fields — paddy=very_high, clay+water-lover=very_high,
+    sandy+dry-lover=low, etc. Returns one of: low | medium | high | very_high."""
+    soils = set(crop.get("soil_types") or [])
+    pref = crop.get("soil_moisture_pref", "medium")
+    if crop["id"] in _PADDY_IDS or (pref == "high" and soils & _CLAY_SOILS):
+        return "very_high"
+    if pref == "high":
+        return "high"
+    if pref == "low":
+        return "low"
+    return "medium"
+
 
 def soil_moisture_fit(moisture_pct: float, pref: str) -> float:
     if moisture_pct is None or moisture_pct != moisture_pct:
@@ -83,6 +103,7 @@ class FitInputs:
     heat_days: int = 0
     frost_days: int = 0
     irrigation_mm: float = 0.0
+    slope_pct: float = 5.0
 
 
 @dataclass
@@ -130,8 +151,15 @@ def score_crop(crop: dict, inputs: FitInputs) -> FitResult:
         penalties["Frost risk"] = pen
     if crop["drought_tolerance"] == "low" and inputs.expected_rain_mm < crop["water_need_mm"][0] * 0.4:
         penalties["Drought risk"] = 0.20
-    if crop["soil_moisture_pref"] == "low" and inputs.expected_rain_mm > crop["water_need_mm"][1] * 1.5:
-        penalties["Waterlogging risk"] = 0.20
+    tol = infer_waterlogging_tolerance(crop)
+    sens = WATERLOG_TOLERANCE_SCORE.get(tol, 0.6)
+    need_hi = crop["water_need_mm"][1]
+    if inputs.slope_pct < 1.5 and inputs.expected_rain_mm > need_hi and sens > 0:
+        flat_factor = _clip((1.5 - inputs.slope_pct) / 1.5)
+        rain_excess = _clip((inputs.expected_rain_mm - need_hi) / max(need_hi, 1.0))
+        pen = min(0.30, 0.30 * sens * flat_factor * (0.5 + 0.5 * rain_excess))
+        if pen >= 0.02:
+            penalties["Waterlogging risk"] = pen
 
     final = max(0.0, base - sum(penalties.values()))
 

@@ -9,6 +9,7 @@ import pytest
 from agri.recommend import load_crops
 from agri.scoring import (
     FitInputs,
+    infer_waterlogging_tolerance,
     score_crop,
     soil_moisture_fit,
     soil_temp_fit,
@@ -148,3 +149,75 @@ def test_frost_penalty_applies_to_sensitive_crop():
     )
     res = score_crop(banana, inputs)
     assert "Frost risk" in res.penalties
+
+
+@pytest.mark.parametrize(
+    "crop_id, expected",
+    [
+        ("paddy", "very_high"),
+        ("paddy_boro", "very_high"),
+        ("tea", "high"),         # smp=high, soil=loam (no clay)
+        ("wheat", "medium"),     # smp=medium
+        ("cotton", "medium"),    # smp=medium
+        ("chickpea", "low"),     # smp=low
+    ],
+)
+def test_infer_tolerance_known_crops(crop_id: str, expected: str) -> None:
+    crops = {c["id"]: c for c in load_crops()}
+    assert infer_waterlogging_tolerance(crops[crop_id]) == expected
+
+
+def test_waterlogging_penalty_fires_on_flat_terrain():
+    """Chickpea (low tolerance) on flat terrain with heavy rain → significant penalty."""
+    crops = {c["id"]: c for c in load_crops()}
+    chickpea = crops["chickpea"]
+    inputs = FitInputs(
+        avg_temp_c=22,
+        tmin_window_c=15,
+        tmax_window_c=28,
+        expected_rain_mm=900,  # >> chickpea water_need_mm[1]=450
+        soil_moisture_pct=35,
+        soil_temp_c=18,
+        sowing_date=date(2025, 11, 1),
+        slope_pct=0.5,  # flat
+    )
+    res = score_crop(chickpea, inputs)
+    assert "Waterlogging risk" in res.penalties
+    assert res.penalties["Waterlogging risk"] >= 8.0
+
+
+def test_waterlogging_penalty_absent_on_steep_terrain():
+    """Same sensitive crop, same heavy rain — but slope ≥1.5% → no penalty."""
+    crops = {c["id"]: c for c in load_crops()}
+    chickpea = crops["chickpea"]
+    inputs = FitInputs(
+        avg_temp_c=22,
+        tmin_window_c=15,
+        tmax_window_c=28,
+        expected_rain_mm=900,
+        soil_moisture_pct=35,
+        soil_temp_c=18,
+        sowing_date=date(2025, 11, 1),
+        slope_pct=8.0,  # steep
+    )
+    res = score_crop(chickpea, inputs)
+    assert "Waterlogging risk" not in res.penalties
+
+
+def test_paddy_no_waterlogging_penalty_in_monsoon():
+    """Paddy's very_high tolerance means no penalty even on flat terrain in monsoon."""
+    crops = {c["id"]: c for c in load_crops()}
+    paddy = crops["paddy"]
+    inputs = FitInputs(
+        avg_temp_c=28,
+        tmin_window_c=24,
+        tmax_window_c=32,
+        expected_rain_mm=2700,
+        soil_moisture_pct=42,
+        soil_temp_c=26,
+        sowing_date=date(2025, 7, 1),
+        slope_pct=0.3,
+    )
+    res = score_crop(paddy, inputs)
+    assert "Waterlogging risk" not in res.penalties
+    assert res.score >= 60

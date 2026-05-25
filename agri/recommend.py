@@ -18,6 +18,8 @@ from agri.weather import (
     forecast_window_stats,
 )
 from agri.soil import root_zone_moisture_pct, root_zone_temp_c
+from agri.suitability import geographic_fit
+from agri.terrain import terrain_summary
 
 
 @lru_cache(maxsize=1)
@@ -77,6 +79,7 @@ def build_inputs_for_window(
     expected_rain = _expected_rain_for_window(forecast_json, normals, sowing_date, growing_days)
     sm = root_zone_moisture_pct(forecast_json)
     st = root_zone_temp_c(forecast_json)
+    slope = terrain_summary(lat, lng).get("slope_pct", 5.0)
     return FitInputs(
         avg_temp_c=tavg,
         tmin_window_c=tmin,
@@ -87,6 +90,7 @@ def build_inputs_for_window(
         sowing_date=sowing_date,
         heat_days=heat_days,
         frost_days=frost_days,
+        slope_pct=slope,
     )
 
 
@@ -101,9 +105,12 @@ def rank_for_date(
     forecast_json = forecast_json or fetch_forecast(lat, lng)
     if normals is None:
         normals = fetch_climate_normals(lat, lng)
+    elev = terrain_summary(lat, lng).get("elevation_m")
     crops = load_crops()
     results: list[FitResult] = []
     for crop in crops:
+        if geographic_fit(crop, elev, normals)[0] < 0.1:
+            continue
         gd = int(sum(crop["growing_days"]) / 2)
         inputs = build_inputs_for_window(lat, lng, sowing_date, gd, forecast_json, normals)
         results.append(score_crop(crop, inputs))
@@ -145,6 +152,7 @@ def monthly_suitability_matrix(
     forecast_json = forecast_json or fetch_forecast(lat, lng)
     if normals is None:
         normals = fetch_climate_normals(lat, lng)
+    elev = terrain_summary(lat, lng).get("elevation_m")
     crops = load_crops()
     today = date.today()
     months: list[date] = []
@@ -153,6 +161,8 @@ def monthly_suitability_matrix(
         months.append(d)
     rows = []
     for crop in crops:
+        if geographic_fit(crop, elev, normals)[0] < 0.1:
+            continue
         gd = int(sum(crop["growing_days"]) / 2)
         row: dict[str, Any] = {"crop_id": crop["id"], "name_en": crop["name_en"]}
         for d in months:

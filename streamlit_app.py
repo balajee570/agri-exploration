@@ -19,6 +19,8 @@ from agri.recommend import (
 )
 from agri.season import SEASON_LABELS, SEASON_LABELS_HI, current_season
 from agri.soil import current_soil_profile, root_zone_moisture_pct, root_zone_temp_c
+from agri.suitability import excluded_for_location
+from agri.terrain import terrain_summary
 from agri.viz import (
     forecast_temperature_chart,
     rainfall_bar_chart,
@@ -98,6 +100,13 @@ def _conditions_strip(place: Place, forecast: dict) -> None:
     cols[4].metric("Root-zone soil temp", f"{st_c:.1f} °C" if pd.notna(st_c) else "—")
     cols[5].metric("Rainfall (30 d)", f"{rain_30:.0f} mm" if pd.notna(rain_30) else "—")
 
+    terr = terrain_summary(place.lat, place.lng)
+    elev_txt = f"{terr['elevation_m']:.0f} m · " if terr.get("elevation_m") is not None else ""
+    flood_warn = " — heavy rain may waterlog sensitive crops." if terr["drainage_class"] == "flat" else ""
+    st.caption(
+        f"⛰️ {elev_txt}Slope: **{terr['slope_pct']:.1f}%** ({terr['drainage_class']}){flood_warn}"
+    )
+
     season = current_season(date.today())
     _slabels = SEASON_LABELS_HI if current_lang() == "hi" else SEASON_LABELS
     st.caption(
@@ -151,6 +160,12 @@ def _recommendation_panel(place: Place, sowing_date: date, forecast: dict, norma
                         st.caption("• " + note)
                     if crop.get("notes"):
                         st.caption(f"_{crop['notes']}_")
+
+    excluded = excluded_for_location(place.lat, place.lng, normals)
+    if excluded:
+        with st.expander(f"ℹ️ {len(excluded)} crops not suitable for this region"):
+            for crop, reason in excluded:
+                st.caption(f"• **{crop_name(crop)}** — {reason}")
 
 
 def _share_panel(place: Place, sowing_date: date, forecast: dict, normals: pd.DataFrame) -> None:
