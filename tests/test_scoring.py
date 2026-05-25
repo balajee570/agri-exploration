@@ -48,6 +48,29 @@ def test_water_fit_irrigation_helps():
     assert helped > base
 
 
+def test_water_fit_excess_water_does_not_fail():
+    """Munnar regression: heavy rain shouldn't collapse water_fit to zero —
+    drainage exists, and waterlogging is handled by a separate penalty."""
+    # ~7x annual need (perennial cumulative; or extreme-monsoon for annuals)
+    assert water_fit(17500, 1500, 2500) >= 0.4
+    # 2x need (Cherrapunji-class monsoon on paddy)
+    assert water_fit(5000, 900, 2500) >= 0.4
+
+
+def test_water_fit_drought_still_punished():
+    """Drought is fatal — the relaxed excess curve must not soften scarcity."""
+    assert water_fit(100, 900, 2500) < 0.2
+    assert water_fit(0, 400, 600) == 0.0
+
+
+def test_water_fit_excess_monotonic_decay():
+    """More excess = lower (or equal) score until the floor."""
+    a = water_fit(2500, 1500, 2500)  # perfect
+    b = water_fit(4000, 1500, 2500)  # ~60% over
+    c = water_fit(10000, 1500, 2500)  # 3x over → floor
+    assert a >= b >= c
+
+
 def test_soil_moisture_fit_peaks_at_target():
     high = soil_moisture_fit(42, "high")
     low = soil_moisture_fit(15, "high")

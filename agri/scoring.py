@@ -26,7 +26,13 @@ def temp_fit(t: float, t_min: float, t_opt_lo: float, t_opt_hi: float, t_max: fl
 
 
 def water_fit(available_mm: float, need_lo: float, need_hi: float, irrigation_mm: float = 0.0) -> float:
-    """1 when in [need_lo, need_hi], decays to 0 at half/double those bounds."""
+    """1 inside [need_lo, need_hi]; drought is fatal but excess decays gently.
+
+    Excess water doesn't kill a crop the way drought does — drainage, terracing
+    and the separate waterlogging penalty (score_crop:154-162) handle the
+    flooding side. Punishing excess linearly through zero was making every
+    monsoon-belt and highland location score water_fit=0.
+    """
     if available_mm is None or available_mm != available_mm:
         return 0.5
     total = available_mm + irrigation_mm
@@ -35,7 +41,7 @@ def water_fit(available_mm: float, need_lo: float, need_hi: float, irrigation_mm
     if total < need_lo:
         return _clip(total / max(need_lo, 1.0))
     excess = (total - need_hi) / max(need_hi, 1.0)
-    return _clip(1.0 - excess)
+    return max(0.4, _clip(1.0 - 0.3 * excess))
 
 
 MOISTURE_TARGETS = {"low": 22.0, "medium": 32.0, "high": 42.0}
