@@ -76,7 +76,8 @@ def build_inputs_for_window(
     tmax = early.get("tmax_mean") or 32.0
     heat_days = full.get("heat_days", 0)
     frost_days = full.get("frost_days", 0)
-    expected_rain = _expected_rain_for_window(forecast_json, normals, sowing_date, growing_days)
+    rain_days = min(growing_days, 365)
+    expected_rain = _expected_rain_for_window(forecast_json, normals, sowing_date, rain_days)
     sm = root_zone_moisture_pct(forecast_json)
     st = root_zone_temp_c(forecast_json)
     slope = terrain_summary(lat, lng).get("slope_pct", 5.0)
