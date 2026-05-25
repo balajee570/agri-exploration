@@ -112,8 +112,7 @@ _FARMING_SYSTEM = (
     "disease/pest patterns, capital requirements, alternative regions where it "
     "thrives. This is critical — the farmer needs an explicit reason NOT to "
     "follow the climate-based suggestion. Format:\n"
-    "- **{Crop}** (Climate: X · Regional: Y) — {counter reasoning}\n\n"
-    "If the counter-crops list is empty, OMIT the ❌ section entirely."
+    "- **{Crop}** (Climate: X · Regional: Y) — {counter reasoning}"
 )
 
 
@@ -171,13 +170,18 @@ def synthesize_farming_intelligence(
         return ""
 
     background = _farming_background(state, season, today_iso)
+    counter_section = ""
+    if counter_crops:
+        counter_section = (
+            f"\n\nClimate engine top picks NOT in AI top 3 — write counter-recommendations "
+            f"for these:\n{_format_crops(counter_crops)}"
+        )
     prompt = (
         f"Location: {district or state}, {state}\n"
         f"Sowing month: {month_name} ({season} season)\n\n"
-        f"Top recommended crops (AI-reranked):\n{_format_crops(top_crops)}\n\n"
-        f"Climate engine top picks NOT in AI top 3 — write counter-recommendations "
-        f"for these:\n{_format_crops(counter_crops)}\n\n"
-        f"Background context from web search:\n{background or '(none — rely on your own knowledge)'}"
+        f"Top recommended crops (AI-reranked):\n{_format_crops(top_crops)}"
+        + counter_section
+        + f"\n\nBackground context from web search:\n{background or '(none — rely on your own knowledge)'}"
     )
     from agri.ai_client import call_ai
     return call_ai(prompt, system=_FARMING_SYSTEM, max_tokens=3500)

@@ -130,50 +130,20 @@ def _recommendation_panel(place: Place, sowing_date: date, forecast: dict, norma
         st.warning("Could not score crops — live data unavailable. Try again in a few seconds.")
         return
 
-    season = current_season(sowing_date)
-    climate_pairs = [(r.crop_id, r.score) for r in results]
-    regional = regional_rerank(
-        state=place.state, district=place.district,
-        sowing_date=sowing_date, season=season,
-        climate_ranked=climate_pairs,
-    )
-
-    def _combined(res) -> float:
-        r = regional.get(res.crop_id)
-        return r.score if r else res.score
-
-    if regional:
-        results = sorted(results, key=_combined, reverse=True)
-        st.caption(
-            f"🧠 Re-ranked for **{place.district or place.state}** using regional cropping priors "
-            f"(Sarvam-105B). Climate score and regional score shown side-by-side."
-        )
-    else:
-        st.caption(
-            "ℹ️ _Showing climate-only ranking — AI regional rerank unavailable. "
-            "Configure `SARVAM_API_KEY` in Streamlit secrets to enable AI farming intelligence._"
-        )
-
     chunks = [results[i : i + 3] for i in range(0, len(results), 3)]
     for chunk in chunks:
         cols = st.columns(len(chunk))
         for col, res in zip(cols, chunk):
             crop = crops[res.crop_id]
-            reg = regional.get(res.crop_id)
-            display_score = reg.score if reg else res.score
-            badge = "🟢" if display_score >= 65 else "🟡" if display_score >= 45 else "🔴"
+            badge = "🟢" if res.score >= 65 else "🟡" if res.score >= 45 else "🔴"
             lo, hi = income_estimate_inr_per_acre(crop)
             with col.container(border=True):
                 st.markdown(f"#### {badge} {crop_name(crop)}")
                 st.markdown(
                     f"<div style='font-size:2.1rem;font-weight:700;color:#2E7D32;line-height:1;'>"
-                    f"{display_score:.0f}<span style='font-size:1rem;'> / 100</span></div>",
+                    f"{res.score:.0f}<span style='font-size:1rem;'> / 100</span></div>",
                     unsafe_allow_html=True,
                 )
-                if reg:
-                    st.caption(f"Climate **{res.score:.0f}** · Regional **{reg.score:.0f}**")
-                    if reg.reason:
-                        st.caption(f"🌱 _{reg.reason}_")
                 st.caption(
                     f"{crop['category'].title()} · "
                     f"{int(sum(crop['growing_days'])/2)} days to harvest · "
@@ -199,13 +169,7 @@ def _recommendation_panel(place: Place, sowing_date: date, forecast: dict, norma
             for crop, reason in excluded:
                 st.caption(f"• **{crop_name(crop)}** — {reason}")
 
-    top_crops_payload = _build_crop_payload(results[:3], regional, crops)
-    counter_crops_payload = _build_counter_payload(results, regional, crops)
-    _market_panel(
-        place=place, season=season, sowing_date=sowing_date,
-        top_crops=top_crops_payload, counter_crops=counter_crops_payload,
-        regional_active=bool(regional),
-    )
+    _market_panel(place=place, sowing_date=sowing_date, results=results)
 
 
 def _build_crop_payload(results, regional, crops) -> list[dict]:
@@ -257,12 +221,17 @@ def _build_counter_payload(results, regional, crops) -> list[dict]:
     return out
 
 
-def _market_panel(
-    place: Place, season: str, sowing_date: date,
-    top_crops: list[dict], counter_crops: list[dict],
-    regional_active: bool,
-) -> None:
-    bundle = fetch_market_signals(place.state, season, sowing_date, top_crops, counter_crops)
+def _market_panel(place: Place, sowing_date: date, results: list) -> None:
+    crops = crops_by_id()
+    season = current_season(sowing_date)
+    regional = regional_rerank(
+        state=place.state, district=place.district,
+        sowing_date=sowing_date, season=season,
+        climate_ranked=[(r.crop_id, r.score) for r in results],
+    )
+    top_crops_payload = _build_crop_payload(results[:3], regional, crops)
+    counter_crops_payload = _build_counter_payload(results, regional, crops)
+    bundle = fetch_market_signals(place.state, season, sowing_date, top_crops_payload, counter_crops_payload)
     summary = bundle.get("summary_md", "")
     links = bundle.get("links", [])
     if not summary and not links:
@@ -271,15 +240,14 @@ def _market_panel(
     with st.expander(label, expanded=False):
         if summary:
             st.markdown(summary)
-        elif regional_active:
+        elif regional:
             st.caption(
                 "_AI farming-intelligence synthesis returned empty — "
                 "showing marketplace directory below._"
             )
         else:
             st.info(
-                "💡 **AI farming intelligence unavailable** — recommendations "
-                "above are climate-only. Configure `SARVAM_API_KEY` in "
+                "💡 **AI farming intelligence unavailable** — configure `SARVAM_API_KEY` in "
                 "Streamlit secrets to enable AI-driven regional reasoning and "
                 "explicit counter-recommendations for poorly-fitting crops."
             )
@@ -297,46 +265,25 @@ def _share_panel(place: Place, sowing_date: date, forecast: dict, normals: pd.Da
     )
     if not results:
         return
-    season = current_season(sowing_date)
-    regional = regional_rerank(
-        state=place.state, district=place.district,
-        sowing_date=sowing_date, season=season,
-        climate_ranked=[(r.crop_id, r.score) for r in results],
-    )
-    if regional:
-        results = sorted(
-            results,
-            key=lambda r: (regional.get(r.crop_id).score if regional.get(r.crop_id) else r.score),
-            reverse=True,
-        )
     top3 = results[:3]
     crops = crops_by_id()
-    header = "Top crop recommendations:" + (" (AI-reranked)" if regional else "")
     lines = [
         f"🌾 KrishiCast farm plan — {place.label}",
         f"📅 Sowing around {sowing_date.strftime('%d %b %Y')}",
         "",
-        header,
+        "Top crop recommendations:",
     ]
     for i, res in enumerate(top3, 1):
         crop = crops[res.crop_id]
-        reg = regional.get(res.crop_id) if regional else None
-        if reg:
-            score_txt = f"Regional: {reg.score:.0f}/100 · Climate: {res.score:.0f}/100"
-        else:
-            score_txt = f"Score: {res.score:.0f}/100"
         lo, hi = income_estimate_inr_per_acre(crop)
         lines += [
-            f"{i}. {crop['name_en']} ({crop.get('name_hi', '')})  —  {score_txt}",
+            f"{i}. {crop['name_en']} ({crop.get('name_hi', '')})  —  Score: {res.score:.0f}/100",
             f"   {int(sum(crop['growing_days'])/2)} days · Water need: {crop['water_need_mm'][0]}–{crop['water_need_mm'][1]} mm",
         ]
-        if reg and reg.reason:
-            lines.append(f"   🌱 {reg.reason}")
         if lo and hi:
             lines.append(f"   Est. income: ₹{lo/1000:.0f}k–₹{hi/1000:.0f}k/acre")
     lines += ["", "Generated by KrishiCast (krishicast.streamlit.app)"]
-    summary = "\n".join(lines)
-    st.code(summary, language=None)
+    st.code("\n".join(lines), language=None)
     st.caption("Tap the copy icon (top-right of the box) to copy, then paste into WhatsApp or SMS.")
 
 
