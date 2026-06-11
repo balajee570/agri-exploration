@@ -7,7 +7,13 @@ from datetime import date
 from agri.pests import PEST_RULES, pest_warnings_for
 from agri.rotation import next_season_partners
 from agri.schemes import is_msp_crop, is_pmfby_crop, schemes_for
-from agri.soilgrids import _texture_to_class
+from agri import soilgrids
+from agri.soilgrids import (
+    SoilGridsUnavailable,
+    _parse_layers,
+    _texture_to_class,
+    _to_profile,
+)
 from agri.varieties import recommend_varieties
 
 
@@ -133,3 +139,87 @@ def test_texture_triangle_clay_loam():
 
 def test_texture_triangle_sandy_loam():
     assert _texture_to_class(sand=72, clay=10) == "sandy_loam"
+
+
+# ---- soilgrids response parsing & land/water gate ---------------------------
+
+def _layer(name: str, d_factor: float, means: dict[str, float | None]) -> dict:
+    return {
+        "name": name,
+        "unit_measure": {"d_factor": d_factor},
+        "depths": [
+            {"label": label, "values": {"mean": mean}}
+            for label, mean in means.items()
+        ],
+    }
+
+
+def _api_response(layers: list[dict]) -> dict:
+    return {"properties": {"layers": layers}}
+
+
+def test_parse_layers_thickness_weighted_mean():
+    # phh2o comes back ×10; weights are 5/10/15 over 0-5/5-15/15-30 cm.
+    data = _api_response([
+        _layer("phh2o", 10, {"0-5cm": 60, "5-15cm": 63, "15-30cm": 66}),
+    ])
+    raw = _parse_layers(data)
+    # (5*60 + 10*63 + 15*66) / 30 / 10 = 6.40
+    assert raw["phh2o"] == 6.4
+    assert raw["clay"] is None  # absent layer stays None
+
+
+def test_parse_layers_skips_null_depths():
+    data = _api_response([
+        _layer("clay", 10, {"0-5cm": None, "5-15cm": 300, "15-30cm": None}),
+    ])
+    assert _parse_layers(data)["clay"] == 30.0
+
+
+def test_to_profile_full_schema():
+    raw = {"phh2o": 6.2, "clay": 42.0, "sand": 28.0, "soc": 14.0}
+    profile = _to_profile(raw)
+    assert profile == {
+        "ph_h2o": 6.2,
+        "clay_pct": 42.0,
+        "sand_pct": 28.0,
+        "organic_carbon_pct": 1.4,
+        "silt_pct": 30.0,
+        "soil_class": "clay",
+    }
+
+
+def test_to_profile_all_null_is_none():
+    assert _to_profile({"phh2o": None, "clay": None, "sand": None, "soc": None}) is None
+
+
+def test_has_soil_true_on_land(monkeypatch):
+    monkeypatch.setattr(
+        soilgrids, "_query_topsoil",
+        lambda lat, lng: {"phh2o": 6.5, "clay": None, "sand": None, "soc": None},
+    )
+    assert soilgrids.has_soil(25.7549, 86.0315) is True
+
+
+def test_has_soil_false_only_when_api_confirms_no_soil(monkeypatch):
+    monkeypatch.setattr(
+        soilgrids, "_query_topsoil",
+        lambda lat, lng: {"phh2o": None, "clay": None, "sand": None, "soc": None},
+    )
+    assert soilgrids.has_soil(0.0, -150.0) is False
+
+
+def test_has_soil_fails_open_when_api_unreachable(monkeypatch):
+    def boom(lat, lng):
+        raise SoilGridsUnavailable("HTTP 429")
+
+    monkeypatch.setattr(soilgrids, "_query_topsoil", boom)
+    assert soilgrids.has_soil(25.7549, 86.0315) is True
+
+
+def test_fetch_soil_profile_returns_none_when_unreachable(monkeypatch):
+    def boom(lat, lng):
+        raise SoilGridsUnavailable("timeout")
+
+    monkeypatch.setattr(soilgrids, "_query_topsoil", boom)
+    assert soilgrids.fetch_soil_profile(25.7549, 86.0315) is None
