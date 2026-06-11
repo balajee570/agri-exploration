@@ -247,7 +247,7 @@ def _next_window_caption(crop: dict, sowing_date: date,
 
 
 def _render_crop_card(res, crop: dict, place: Place, sowing_date: date,
-                     irrigated: bool, idx: int) -> None:
+                     irrigated: bool, idx: int, panel_key: str) -> None:
     with st.container(border=True):
         # Cards already sit two column-levels deep (page split → card grid),
         # which is Streamlit's nesting limit — the header must stack, not
@@ -262,7 +262,7 @@ def _render_crop_card(res, crop: dict, place: Place, sowing_date: date,
 
         st.plotly_chart(score_ring(res.score, res.score_low, res.score_high),
                         use_container_width=True,
-                        key=f"ring_{res.crop_id}_{idx}")
+                        key=f"ring_{panel_key}_{res.crop_id}_{idx}")
         st.caption(f"Confidence: {res.score_low:.0f}–{res.score_high:.0f}")
 
         lo, hi = income_estimate_inr_per_acre(crop, irrigated=irrigated)
@@ -340,7 +340,7 @@ def _render_crop_card(res, crop: dict, place: Place, sowing_date: date,
                 for s in schemes:
                     st.markdown(f"- [{s['name']}]({s['url']}) — {s['blurb']}")
             # Feedback
-            fb_key = f"fb_{res.crop_id}_{idx}_{sowing_date}"
+            fb_key = f"fb_{panel_key}_{res.crop_id}_{idx}_{sowing_date}"
             if st.button("👎 This recommendation didn't work for me",
                          key=fb_key, use_container_width=True):
                 _append_feedback(place=place, sowing_date=sowing_date,
@@ -352,7 +352,7 @@ def _render_crop_card(res, crop: dict, place: Place, sowing_date: date,
 
 def _recommendation_panel(place: Place, sowing_date: date,
                           forecast: dict, normals: pd.DataFrame,
-                          irrigated: bool) -> None:
+                          irrigated: bool, panel_key: str = "main") -> None:
     st.markdown(f"### 🌱 Best crops to sow around **{sowing_date.strftime('%d %b %Y')}**")
     if irrigated:
         st.caption("💧 Irrigation assumed — yields and water-fit reflect supplemental watering.")
@@ -384,7 +384,7 @@ def _recommendation_panel(place: Place, sowing_date: date,
             crop = crops[res.crop_id]
             with col:
                 _render_crop_card(res, crop, place, sowing_date, irrigated,
-                                 idx=chunk_idx * 3 + col_idx)
+                                 idx=chunk_idx * 3 + col_idx, panel_key=panel_key)
 
     excluded = excluded_for_location(place.lat, place.lng, normals)
     if excluded:
@@ -519,7 +519,8 @@ def _later_windows(place: Place, forecast: dict, normals: pd.DataFrame,
     for tab, weeks in zip(tabs, [2, 4, 6, 8]):
         with tab:
             future = date.today().fromordinal(date.today().toordinal() + weeks * 7)
-            _recommendation_panel(place, future, forecast, normals, irrigated)
+            _recommendation_panel(place, future, forecast, normals, irrigated,
+                                  panel_key=f"wk{weeks}")
 
 
 def _mini_map(place: Place) -> None:
