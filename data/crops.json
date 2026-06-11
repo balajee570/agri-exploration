@@ -19,7 +19,8 @@
     "yield_q_per_acre": [16, 28],
     "price_inr_per_q": [2000, 2300],
     "notes": "MSP-backed. Transplanted variety needs standing water.",
-    "slope_max_pct": 5
+    "slope_max_pct": 5,
+    "irrigated_yield_q_per_acre": [24, 40]
   },
   {
     "id": "paddy_boro",
@@ -41,7 +42,8 @@
     "yield_q_per_acre": [20, 32],
     "price_inr_per_q": [2000, 2300],
     "notes": "Common in Bihar, West Bengal, Assam. Heavy irrigation required.",
-    "slope_max_pct": 5
+    "slope_max_pct": 5,
+    "irrigated_yield_q_per_acre": [28, 42]
   },
   {
     "id": "wheat",
@@ -62,7 +64,8 @@
     "price_inr_per_q": [2200, 2400],
     "notes": "MSP-backed. Cool, dry climate; sensitive to terminal heat.",
     "elevation_m": [0, 2500],
-    "slope_max_pct": 15
+    "slope_max_pct": 15,
+    "irrigated_yield_q_per_acre": [20, 32]
   },
   {
     "id": "maize_kharif",
@@ -83,7 +86,8 @@
     "price_inr_per_q": [1900, 2200],
     "notes": "Hybrid varieties yield well. Sensitive to waterlogging.",
     "elevation_m": [0, 2500],
-    "slope_max_pct": 25
+    "slope_max_pct": 25,
+    "irrigated_yield_q_per_acre": [25, 45]
   },
   {
     "id": "maize_rabi",
@@ -104,7 +108,8 @@
     "price_inr_per_q": [1900, 2200],
     "notes": "Higher yield than Kharif; better grain quality.",
     "elevation_m": [0, 2500],
-    "slope_max_pct": 25
+    "slope_max_pct": 25,
+    "irrigated_yield_q_per_acre": [32, 55]
   },
   {
     "id": "sorghum",
@@ -209,7 +214,8 @@
     "price_inr_per_q": [5400, 6000],
     "notes": "MSP-backed. Fixes nitrogen; great rotation crop.",
     "elevation_m": [0, 2200],
-    "slope_max_pct": 15
+    "slope_max_pct": 15,
+    "irrigated_yield_q_per_acre": [10, 18]
   },
   {
     "id": "pigeon_pea",
@@ -335,7 +341,8 @@
     "price_inr_per_q": [4500, 5000],
     "notes": "MSP-backed. Dominant in MP, Maharashtra.",
     "elevation_m": [0, 1500],
-    "slope_max_pct": 12
+    "slope_max_pct": 12,
+    "irrigated_yield_q_per_acre": [12, 18]
   },
   {
     "id": "groundnut",
@@ -356,7 +363,8 @@
     "price_inr_per_q": [6300, 6900],
     "notes": "MSP-backed. Needs well-drained sandy loam.",
     "elevation_m": [0, 1500],
-    "slope_max_pct": 12
+    "slope_max_pct": 12,
+    "irrigated_yield_q_per_acre": [14, 22]
   },
   {
     "id": "mustard",
@@ -377,7 +385,8 @@
     "price_inr_per_q": [5500, 6000],
     "notes": "MSP-backed. Cool, dry winter needed.",
     "elevation_m": [0, 2500],
-    "slope_max_pct": 15
+    "slope_max_pct": 15,
+    "irrigated_yield_q_per_acre": [8, 16]
   },
   {
     "id": "sesame",
@@ -482,7 +491,8 @@
     "price_inr_per_q": [7000, 7700],
     "notes": "MSP-backed. Bt cotton dominant.",
     "elevation_m": [0, 800],
-    "slope_max_pct": 8
+    "slope_max_pct": 8,
+    "irrigated_yield_q_per_acre": [12, 24]
   },
   {
     "id": "jute",
@@ -524,7 +534,8 @@
     "price_inr_per_q": [340, 380],
     "notes": "FRP-backed (~₹340/q). High water demand.",
     "elevation_m": [0, 1500],
-    "slope_max_pct": 8
+    "slope_max_pct": 8,
+    "irrigated_yield_q_per_acre": [350, 500]
   },
   {
     "id": "potato",
@@ -545,7 +556,8 @@
     "price_inr_per_q": [800, 1800],
     "notes": "Cold-storage dependent for marketing.",
     "elevation_m": [0, 3000],
-    "slope_max_pct": 35
+    "slope_max_pct": 35,
+    "irrigated_yield_q_per_acre": [120, 200]
   },
   {
     "id": "onion_rabi",
@@ -566,7 +578,8 @@
     "price_inr_per_q": [1200, 2500],
     "notes": "Storage-friendly variety; Maharashtra leader.",
     "elevation_m": [0, 1800],
-    "slope_max_pct": 15
+    "slope_max_pct": 15,
+    "irrigated_yield_q_per_acre": [120, 200]
   },
   {
     "id": "onion_kharif",
@@ -608,7 +621,8 @@
     "price_inr_per_q": [800, 4000],
     "notes": "Highly volatile prices.",
     "elevation_m": [0, 2000],
-    "slope_max_pct": 20
+    "slope_max_pct": 20,
+    "irrigated_yield_q_per_acre": [200, 350]
   },
   {
     "id": "brinjal",
@@ -713,7 +727,8 @@
     "price_inr_per_q": [8000, 18000],
     "notes": "Dry chilli storable; high-value.",
     "elevation_m": [0, 2000],
-    "slope_max_pct": 20
+    "slope_max_pct": 20,
+    "irrigated_yield_q_per_acre": [50, 120]
   },
   {
     "id": "turmeric",
@@ -1120,7 +1135,7 @@
     "name_hi": "चाय",
     "category": "cash",
     "seasons": ["perennial"],
-    "sowing_months": [6, 7, 8],
+    "sowing_months": [5, 6, 7, 8, 9],
     "growing_days": [1095, 3650],
     "temp_c": {"min": 12, "opt_lo": 18, "opt_hi": 28, "max": 35},
     "germination_temp_min_c": 15,
@@ -1142,7 +1157,7 @@
     "name_hi": "कॉफी",
     "category": "cash",
     "seasons": ["perennial"],
-    "sowing_months": [6, 7],
+    "sowing_months": [4, 5, 6, 7, 8],
     "growing_days": [1460, 3650],
     "temp_c": {"min": 15, "opt_lo": 18, "opt_hi": 28, "max": 32},
     "germination_temp_min_c": 18,
@@ -1164,7 +1179,7 @@
     "name_hi": "इलायची",
     "category": "spice",
     "seasons": ["perennial"],
-    "sowing_months": [6, 7, 8],
+    "sowing_months": [5, 6, 7, 8, 9],
     "growing_days": [1095, 2920],
     "temp_c": {"min": 10, "opt_lo": 15, "opt_hi": 25, "max": 32},
     "germination_temp_min_c": 15,
@@ -1249,7 +1264,7 @@
     "name_hi": "काली मिर्च",
     "category": "spice",
     "seasons": ["perennial"],
-    "sowing_months": [5, 6, 7],
+    "sowing_months": [5, 6, 7, 8],
     "growing_days": [1095, 2920],
     "temp_c": {"min": 10, "opt_lo": 18, "opt_hi": 30, "max": 38},
     "germination_temp_min_c": 18,
@@ -1271,7 +1286,7 @@
     "name_hi": "जायफल",
     "category": "spice",
     "seasons": ["perennial"],
-    "sowing_months": [5, 6, 7],
+    "sowing_months": [5, 6, 7, 8],
     "growing_days": [1825, 3650],
     "temp_c": {"min": 14, "opt_lo": 22, "opt_hi": 30, "max": 35},
     "germination_temp_min_c": 20,
@@ -1293,7 +1308,7 @@
     "name_hi": "लौंग",
     "category": "spice",
     "seasons": ["perennial"],
-    "sowing_months": [5, 6, 7],
+    "sowing_months": [5, 6, 7, 8],
     "growing_days": [1825, 3650],
     "temp_c": {"min": 15, "opt_lo": 22, "opt_hi": 30, "max": 35},
     "germination_temp_min_c": 20,
@@ -1315,7 +1330,7 @@
     "name_hi": "दालचीनी",
     "category": "spice",
     "seasons": ["perennial"],
-    "sowing_months": [5, 6, 7],
+    "sowing_months": [5, 6, 7, 8],
     "growing_days": [730, 2920],
     "temp_c": {"min": 18, "opt_lo": 22, "opt_hi": 30, "max": 35},
     "germination_temp_min_c": 20,

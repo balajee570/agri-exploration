@@ -6,11 +6,13 @@ from datetime import date
 
 import pytest
 
-from agri.recommend import load_crops
+from agri.recommend import crops_by_id, load_crops
 from agri.scoring import (
     FitInputs,
     infer_waterlogging_tolerance,
+    next_sowing_month,
     score_crop,
+    season_fit,
     soil_moisture_fit,
     soil_temp_fit,
     temp_fit,
@@ -244,3 +246,143 @@ def test_paddy_no_waterlogging_penalty_in_monsoon():
     res = score_crop(paddy, inputs)
     assert "Waterlogging risk" not in res.penalties
     assert res.score >= 60
+
+
+# ---- Season reliability ------------------------------------------------------
+
+def test_season_fit_in_window_is_one():
+    assert season_fit(date(2026, 5, 25), ["kharif"], [4, 5, 6]) == 1.0
+
+
+def test_season_fit_one_month_out():
+    assert season_fit(date(2026, 5, 25), ["perennial"], [6, 7, 8]) == 0.40
+
+
+def test_season_fit_two_months_out():
+    assert season_fit(date(2026, 5, 25), ["zaid"], [1, 2, 3]) == 0.15
+
+
+def test_season_fit_far_off_season():
+    assert season_fit(date(2026, 7, 1), ["rabi"], [11, 12]) == 0.05
+
+
+def test_season_fit_empty_months_returns_neutral():
+    assert season_fit(date(2026, 5, 25), ["perennial"], []) == 0.5
+
+
+def test_next_sowing_month_basic():
+    # May (5) → next sowing for [6,7,8] is June (6)
+    assert next_sowing_month(date(2026, 5, 25), [6, 7, 8]) == 6
+    # In-window → returns current month
+    assert next_sowing_month(date(2026, 6, 15), [6, 7, 8]) == 6
+
+
+def test_next_sowing_month_wraps_year():
+    # July (7) → next sowing for [11,12] is November
+    assert next_sowing_month(date(2026, 7, 1), [11, 12]) == 11
+
+
+def test_mango_off_window_below_yellow():
+    """The bug report: Mango (sowing_months [6,7,8]) sown 25 May should NOT
+    appear as a top recommendation."""
+    mango = crops_by_id()["mango"]
+    inputs = FitInputs(
+        avg_temp_c=28, tmin_window_c=22, tmax_window_c=34,
+        expected_rain_mm=900, soil_moisture_pct=32,
+        soil_temp_c=26, sowing_date=date(2026, 5, 25),
+    )
+    assert score_crop(mango, inputs).score < 50, (
+        f"mango off-window scored {score_crop(mango, inputs).score}"
+    )
+
+
+def test_no_crop_scores_green_far_off_season():
+    """'World best' guarantee: no crop ever scores >= 65 when sown ≥3 months
+    from its sowing window, even with otherwise-perfect inputs."""
+    template = dict(avg_temp_c=24, tmin_window_c=18, tmax_window_c=30,
+                    expected_rain_mm=600, soil_moisture_pct=32, soil_temp_c=24)
+    for crop in load_crops():
+        sowing_months = crop.get("sowing_months") or []
+        if not sowing_months:
+            continue
+        for test_month in range(1, 13):
+            if all(min((test_month - sm) % 12, (sm - test_month) % 12) >= 3
+                   for sm in sowing_months):
+                inputs = FitInputs(sowing_date=date(2026, test_month, 15), **template)
+                res = score_crop(crop, inputs)
+                assert res.score < 65, (
+                    f"{crop['id']} scored {res.score} in month {test_month} "
+                    f"(sowing_months={sowing_months})"
+                )
+                break
+
+
+# ---- Confidence band --------------------------------------------------------
+
+def test_confidence_band_widens_with_growing_window():
+    paddy = crops_by_id()["paddy"]
+    near = FitInputs(avg_temp_c=28, tmin_window_c=24, tmax_window_c=32,
+                     expected_rain_mm=1400, soil_moisture_pct=40, soil_temp_c=26,
+                     sowing_date=date(2026, 7, 1), growing_days=14)
+    far = FitInputs(avg_temp_c=28, tmin_window_c=24, tmax_window_c=32,
+                    expected_rain_mm=1400, soil_moisture_pct=40, soil_temp_c=26,
+                    sowing_date=date(2026, 7, 1), growing_days=180)
+    near_r = score_crop(paddy, near)
+    far_r = score_crop(paddy, far)
+    near_spread = near_r.score_high - near_r.score_low
+    far_spread = far_r.score_high - far_r.score_low
+    assert far_spread > near_spread
+
+
+# ---- Aspect modifier --------------------------------------------------------
+
+def test_aspect_bonus_for_highland_perennial():
+    coffee = crops_by_id()["coffee"]
+    base = FitInputs(avg_temp_c=22, tmin_window_c=16, tmax_window_c=28,
+                     expected_rain_mm=2000, soil_moisture_pct=35, soil_temp_c=22,
+                     sowing_date=date(2026, 6, 1))
+    s_facing = FitInputs(avg_temp_c=22, tmin_window_c=16, tmax_window_c=28,
+                         expected_rain_mm=2000, soil_moisture_pct=35, soil_temp_c=22,
+                         sowing_date=date(2026, 6, 1), aspect_compass="S")
+    n_facing = FitInputs(avg_temp_c=22, tmin_window_c=16, tmax_window_c=28,
+                         expected_rain_mm=2000, soil_moisture_pct=35, soil_temp_c=22,
+                         sowing_date=date(2026, 6, 1), aspect_compass="N")
+    assert score_crop(coffee, n_facing).score >= score_crop(coffee, base).score
+    assert score_crop(coffee, s_facing).score <= score_crop(coffee, base).score
+
+
+# ---- Mandi distance penalty -------------------------------------------------
+
+def test_mandi_distance_penalty_kicks_in_over_50km():
+    paddy = crops_by_id()["paddy"]
+    near = FitInputs(avg_temp_c=28, tmin_window_c=24, tmax_window_c=32,
+                     expected_rain_mm=1400, soil_moisture_pct=40, soil_temp_c=26,
+                     sowing_date=date(2026, 7, 1), mandi_distance_km=10)
+    far = FitInputs(avg_temp_c=28, tmin_window_c=24, tmax_window_c=32,
+                    expected_rain_mm=1400, soil_moisture_pct=40, soil_temp_c=26,
+                    sowing_date=date(2026, 7, 1), mandi_distance_km=120)
+    assert score_crop(paddy, near).score > score_crop(paddy, far).score
+
+
+# ---- Pest warnings ----------------------------------------------------------
+
+def test_pest_warnings_present_for_paddy_in_monsoon():
+    paddy = crops_by_id()["paddy"]
+    inputs = FitInputs(
+        avg_temp_c=26, tmin_window_c=23, tmax_window_c=30,
+        expected_rain_mm=350, soil_moisture_pct=42, soil_temp_c=27,
+        sowing_date=date(2026, 7, 15),
+    )
+    res = score_crop(paddy, inputs)
+    assert len(res.pest_warnings) >= 1
+
+
+def test_no_pest_warnings_for_perennial_without_rules():
+    pomegranate = crops_by_id()["pomegranate"]
+    inputs = FitInputs(
+        avg_temp_c=25, tmin_window_c=20, tmax_window_c=32,
+        expected_rain_mm=700, soil_moisture_pct=28, soil_temp_c=25,
+        sowing_date=date(2026, 7, 15),
+    )
+    res = score_crop(pomegranate, inputs)
+    assert res.pest_warnings == []

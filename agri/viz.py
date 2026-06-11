@@ -179,3 +179,32 @@ def compare_radar(by_crop: dict[str, dict[str, float]]) -> go.Figure:
         title="Component-wise comparison",
     )
     return fig
+
+
+
+def score_ring(score: float, score_low: float | None = None, score_high: float | None = None) -> "go.Figure":
+    """Plotly gauge — green ≥65, amber 45-64, red <45. Optional confidence band."""
+    color = "#2E7D32" if score >= 65 else "#F9A825" if score >= 45 else "#C62828"
+    fig = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=score,
+        number={"suffix": "/100", "font": {"size": 36, "color": color}},
+        gauge={
+            "axis": {"range": [0, 100], "tickwidth": 0, "tickcolor": "#888"},
+            "bar": {"color": color, "thickness": 0.30},
+            "bgcolor": "#F0F0EB",
+            "borderwidth": 0,
+            "steps": [
+                {"range": [0, 45], "color": "#FFEBEE"},
+                {"range": [45, 65], "color": "#FFF8E1"},
+                {"range": [65, 100], "color": "#E8F5E9"},
+            ],
+        },
+        domain={"x": [0, 1], "y": [0, 1]},
+    ))
+    fig.update_layout(
+        height=170,
+        margin=dict(l=8, r=8, t=8, b=8),
+        paper_bgcolor="rgba(0,0,0,0)",
+    )
+    return fig
