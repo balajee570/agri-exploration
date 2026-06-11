@@ -1,11 +1,14 @@
+# Pinned set proven to deploy on Streamlit Cloud (py3.11).
+# streamlit-folium must stay in lockstep with streamlit, or the map
+# component never finishes loading and the app hangs at startup.
 streamlit==1.45.1
-streamlit-folium>=0.27.2
-folium
-plotly
-pandas
-numpy
-pillow
-httpx
-requests
-tavily-python
-python-dateutil
+streamlit-folium==0.23.2
+folium==0.19.4
+plotly==5.24.1
+pandas==2.3.0
+numpy==2.1.3
+pillow==11.0.0
+httpx==0.28.1
+requests==2.32.3
+tavily-python>=0.5,<1
+python-dateutil==2.9.0.post0
