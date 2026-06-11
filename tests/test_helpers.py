@@ -223,3 +223,42 @@ def test_fetch_soil_profile_returns_none_when_unreachable(monkeypatch):
 
     monkeypatch.setattr(soilgrids, "_query_topsoil", boom)
     assert soilgrids.fetch_soil_profile(25.7549, 86.0315) is None
+
+
+_NULL = {"phh2o": None, "clay": None, "sand": None, "soc": None}
+_AMRITSAR = (31.6223, 74.8753)
+
+
+def test_masked_town_centre_falls_back_to_neighbour(monkeypatch):
+    # SoilGrids masks built-up cells; the exact pin (a geocoded city centre)
+    # is all-null but the cell ~2 km away has farmland values.
+    def fake_query(lat, lng):
+        if (lat, lng) == _AMRITSAR:
+            return dict(_NULL)
+        return {"phh2o": 7.8, "clay": 22.0, "sand": 45.0, "soc": 5.0}
+
+    monkeypatch.setattr(soilgrids, "_query_topsoil", fake_query)
+    assert soilgrids.has_soil(*_AMRITSAR) is True
+    profile = soilgrids.fetch_soil_profile(*_AMRITSAR)
+    assert profile is not None and profile["ph_h2o"] == 7.8
+
+
+def test_masked_centre_skips_failing_probes(monkeypatch):
+    calls = []
+
+    def fake_query(lat, lng):
+        calls.append((lat, lng))
+        if (lat, lng) == _AMRITSAR:
+            return dict(_NULL)
+        if len(calls) < 4:  # first two probes error out
+            raise SoilGridsUnavailable("HTTP 429")
+        return {"phh2o": 6.9, "clay": None, "sand": None, "soc": None}
+
+    monkeypatch.setattr(soilgrids, "_query_topsoil", fake_query)
+    assert soilgrids.has_soil(*_AMRITSAR) is True
+
+
+def test_open_ocean_all_probes_null(monkeypatch):
+    monkeypatch.setattr(soilgrids, "_query_topsoil", lambda lat, lng: dict(_NULL))
+    assert soilgrids.has_soil(0.0, -150.0) is False
+    assert soilgrids.fetch_soil_profile(0.0, -150.0) is None

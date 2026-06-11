@@ -588,13 +588,15 @@ def main() -> None:
 
     place = _location_strip()
 
-    # Ocean check — short-circuit if pin is in water
+    # Ocean check — advisory only. SoilGrids can be masked at the exact pin
+    # (and a remote dataset must never lock farmers out), so warn and carry
+    # on with climate-only scoring instead of hard-stopping the app.
     if not has_soil(place.lat, place.lng):
-        st.error(
-            "🌊 No soil profile is available at this point — it appears to be open water, "
-            "glacier, or otherwise non-arable terrain. Please drop your pin on land."
+        st.warning(
+            "🌊 No soil data is available at this point or nearby — it may be open water "
+            "or otherwise non-arable terrain. If your farm is here, recommendations will "
+            "continue without local soil checks; otherwise drop your pin on farmland."
         )
-        return
 
     sowing_date = st.date_input(
         "When do you plan to sow?",
