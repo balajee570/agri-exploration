@@ -249,25 +249,26 @@ def _next_window_caption(crop: dict, sowing_date: date,
 def _render_crop_card(res, crop: dict, place: Place, sowing_date: date,
                      irrigated: bool, idx: int) -> None:
     with st.container(border=True):
-        head_l, head_r = st.columns([2, 3])
-        with head_l:
-            st.plotly_chart(score_ring(res.score, res.score_low, res.score_high),
-                            use_container_width=True,
-                            key=f"ring_{res.crop_id}_{idx}")
-            st.caption(f"Confidence: {res.score_low:.0f}–{res.score_high:.0f}")
-        with head_r:
-            st.markdown(f"<h3>{crop_name(crop)}</h3>", unsafe_allow_html=True)
-            badges = [
-                f'<span class="badge badge-earth">{crop["category"].title()}</span>',
-                f'<span class="badge badge-blue">{int(sum(crop["growing_days"])/2)} d to harvest</span>',
-                f'<span class="badge badge-amber">{crop["water_need_mm"][0]}–{crop["water_need_mm"][1]} mm water</span>',
-            ]
-            st.markdown(" ".join(badges), unsafe_allow_html=True)
+        # Cards already sit two column-levels deep (page split → card grid),
+        # which is Streamlit's nesting limit — the header must stack, not
+        # open a third st.columns.
+        st.markdown(f"<h3>{crop_name(crop)}</h3>", unsafe_allow_html=True)
+        badges = [
+            f'<span class="badge badge-earth">{crop["category"].title()}</span>',
+            f'<span class="badge badge-blue">{int(sum(crop["growing_days"])/2)} d to harvest</span>',
+            f'<span class="badge badge-amber">{crop["water_need_mm"][0]}–{crop["water_need_mm"][1]} mm water</span>',
+        ]
+        st.markdown(" ".join(badges), unsafe_allow_html=True)
 
-            lo, hi = income_estimate_inr_per_acre(crop, irrigated=irrigated)
-            if lo and hi:
-                label = "Est. income (irrigated)" if irrigated and crop.get("irrigated_yield_q_per_acre") else "Est. income"
-                st.caption(f"{label}: **₹{lo/1000:.0f}k – ₹{hi/1000:.0f}k**/acre")
+        st.plotly_chart(score_ring(res.score, res.score_low, res.score_high),
+                        use_container_width=True,
+                        key=f"ring_{res.crop_id}_{idx}")
+        st.caption(f"Confidence: {res.score_low:.0f}–{res.score_high:.0f}")
+
+        lo, hi = income_estimate_inr_per_acre(crop, irrigated=irrigated)
+        if lo and hi:
+            label = "Est. income (irrigated)" if irrigated and crop.get("irrigated_yield_q_per_acre") else "Est. income"
+            st.caption(f"{label}: **₹{lo/1000:.0f}k – ₹{hi/1000:.0f}k**/acre")
 
         # Best sowing date
         try:
