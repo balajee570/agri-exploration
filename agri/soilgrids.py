@@ -6,6 +6,11 @@ Cached for 30 days (soil doesn't change on human timescales).
 The returned dict's `soil_class` field maps the USDA texture triangle into one
 of the catalog's existing `soil_types` strings so `geographic_fit` can do
 direct set-membership comparison.
+
+Note on depths: SoilGrids only serves the aggregated "0-30cm" interval for
+`ocs`. For phh2o/clay/sand/soc the valid intervals are 0-5cm, 5-15cm and
+15-30cm (then deeper), so we query those three and take a thickness-weighted
+mean to represent the 0-30 cm root zone.
 """
 
 from __future__ import annotations
@@ -19,7 +24,14 @@ from agri.cache import cached
 
 _URL = "https://rest.isric.org/soilgrids/v2.0/properties/query"
 _TTL = 30 * 24 * 60 * 60  # 30 days
+_PROPERTIES = ["phh2o", "clay", "sand", "soc"]
+# Thickness (cm) of each standard topsoil interval, used as weighted-mean weights.
+_DEPTH_WEIGHTS = {"0-5cm": 5.0, "5-15cm": 10.0, "15-30cm": 15.0}
 _logger = logging.getLogger(__name__)
+
+
+class SoilGridsUnavailable(RuntimeError):
+    """The API could not be reached — says nothing about whether soil exists."""
 
 
 def _texture_to_class(sand: float, clay: float) -> str:
@@ -48,19 +60,51 @@ def _texture_to_class(sand: float, clay: float) -> str:
     return "loam"
 
 
-@cached(_TTL)
-def fetch_soil_profile(lat: float, lng: float) -> dict[str, Any] | None:
-    """Returns soil profile dict or None on failure / no-soil (e.g. open water).
+def _depth_label(depth: dict[str, Any]) -> str:
+    label = depth.get("label")
+    if label:
+        return str(label)
+    rng = depth.get("range") or {}
+    top, bottom = rng.get("top_depth"), rng.get("bottom_depth")
+    if top is None or bottom is None:
+        return ""
+    return f"{top}-{bottom}{rng.get('unit_depth', 'cm')}"
 
-    Schema:
-      {"ph_h2o": 6.2, "sand_pct": 28, "clay_pct": 42, "silt_pct": 30,
-       "organic_carbon_pct": 1.4, "soil_class": "clay_loam"}
+
+def _parse_layers(data: dict[str, Any]) -> dict[str, float | None]:
+    """Per-property thickness-weighted topsoil mean, scaled to natural units.
+
+    A property maps to None when the API returned no value for it at this
+    point — all-None across properties is SoilGrids' ocean/glacier signature.
     """
+    out: dict[str, float | None] = {name: None for name in _PROPERTIES}
+    layers = (data.get("properties") or {}).get("layers") or []
+    for layer in layers:
+        name = layer.get("name")
+        if name not in out:
+            continue
+        d_factor = float((layer.get("unit_measure") or {}).get("d_factor") or 1.0)
+        num = den = 0.0
+        for depth in layer.get("depths") or []:
+            weight = _DEPTH_WEIGHTS.get(_depth_label(depth))
+            mean = (depth.get("values") or {}).get("mean")
+            if weight and mean is not None:
+                num += weight * float(mean)
+                den += weight
+        if den:
+            out[name] = (num / den) / d_factor
+    return out
+
+
+@cached(_TTL)
+def _query_topsoil(lat: float, lng: float) -> dict[str, float | None]:
+    """Raises SoilGridsUnavailable on transport failure so the (long-TTL)
+    cache never stores a transient error as if it were a real answer."""
     params = {
         "lat": f"{lat:.4f}",
         "lon": f"{lng:.4f}",
-        "property": ["phh2o", "clay", "sand", "soc"],
-        "depth": "0-30cm",
+        "property": _PROPERTIES,
+        "depth": list(_DEPTH_WEIGHTS),
         "value": "mean",
     }
     try:
@@ -69,33 +113,21 @@ def fetch_soil_profile(lat: float, lng: float) -> dict[str, Any] | None:
             r.raise_for_status()
             data = r.json()
     except Exception as e:
-        _logger.warning("SoilGrids fetch failed at (%s, %s): %s", lat, lng, e)
-        return None
+        raise SoilGridsUnavailable(str(e)) from e
+    return _parse_layers(data)
 
-    layers = (data.get("properties") or {}).get("layers") or []
-    if not layers:
-        return None
 
+def _to_profile(raw: dict[str, float | None]) -> dict[str, Any] | None:
     out: dict[str, Any] = {}
-    for layer in layers:
-        name = layer.get("name")
-        depths = layer.get("depths") or []
-        if not depths:
-            continue
-        mean = (depths[0].get("values") or {}).get("mean")
-        if mean is None:
-            continue
-        d_factor = float((layer.get("unit_measure") or {}).get("d_factor") or 1.0)
-        scaled = mean / d_factor
-        if name == "phh2o":
-            out["ph_h2o"] = round(scaled, 2)
-        elif name == "clay":
-            out["clay_pct"] = round(scaled, 1)
-        elif name == "sand":
-            out["sand_pct"] = round(scaled, 1)
-        elif name == "soc":
-            # SoilGrids SOC is in g/kg; convert to %
-            out["organic_carbon_pct"] = round(scaled / 10.0, 2)
+    if raw.get("phh2o") is not None:
+        out["ph_h2o"] = round(raw["phh2o"], 2)
+    if raw.get("clay") is not None:
+        out["clay_pct"] = round(raw["clay"], 1)
+    if raw.get("sand") is not None:
+        out["sand_pct"] = round(raw["sand"], 1)
+    if raw.get("soc") is not None:
+        # SoilGrids SOC is in g/kg; convert to %
+        out["organic_carbon_pct"] = round(raw["soc"] / 10.0, 2)
 
     if "sand_pct" in out and "clay_pct" in out:
         out["silt_pct"] = round(100.0 - out["sand_pct"] - out["clay_pct"], 1)
@@ -106,7 +138,32 @@ def fetch_soil_profile(lat: float, lng: float) -> dict[str, Any] | None:
     return out
 
 
+def fetch_soil_profile(lat: float, lng: float) -> dict[str, Any] | None:
+    """Returns soil profile dict, or None when no data is available
+    (open water / glacier, or the API was unreachable).
+
+    Schema:
+      {"ph_h2o": 6.2, "sand_pct": 28, "clay_pct": 42, "silt_pct": 30,
+       "organic_carbon_pct": 1.4, "soil_class": "clay_loam"}
+    """
+    try:
+        raw = _query_topsoil(lat, lng)
+    except SoilGridsUnavailable as e:
+        _logger.warning("SoilGrids fetch failed at (%s, %s): %s", lat, lng, e)
+        return None
+    return _to_profile(raw)
+
+
 def has_soil(lat: float, lng: float) -> bool:
-    """Land-or-ocean sanity check. False ≈ open water / glacier / no soil layer."""
-    profile = fetch_soil_profile(lat, lng)
-    return profile is not None and "ph_h2o" in profile
+    """Land-or-ocean sanity check.
+
+    False only when SoilGrids *confirmed* there is no soil layer here (the
+    API answered and every property was null). A fetch failure fails open —
+    never lock a farmer out because a free API had a bad minute.
+    """
+    try:
+        raw = _query_topsoil(lat, lng)
+    except SoilGridsUnavailable as e:
+        _logger.warning("SoilGrids unreachable at (%s, %s); assuming land: %s", lat, lng, e)
+        return True
+    return any(v is not None for v in raw.values())
