@@ -262,3 +262,16 @@ def test_open_ocean_all_probes_null(monkeypatch):
     monkeypatch.setattr(soilgrids, "_query_topsoil", lambda lat, lng: dict(_NULL))
     assert soilgrids.has_soil(0.0, -150.0) is False
     assert soilgrids.fetch_soil_profile(0.0, -150.0) is None
+
+
+def test_large_city_needs_second_probe_ring(monkeypatch):
+    # Urban mask wider than the 2 km ring: only the ~6 km probes reach farmland.
+    def fake_query(lat, lng):
+        if max(abs(lat - _AMRITSAR[0]), abs(lng - _AMRITSAR[1])) < 0.05:
+            return dict(_NULL)
+        return {"phh2o": 7.6, "clay": 24.0, "sand": 40.0, "soc": 6.0}
+
+    monkeypatch.setattr(soilgrids, "_query_topsoil", fake_query)
+    assert soilgrids.has_soil(*_AMRITSAR) is True
+    profile = soilgrids.fetch_soil_profile(*_AMRITSAR)
+    assert profile is not None and profile["ph_h2o"] == 7.6

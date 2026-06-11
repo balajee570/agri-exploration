@@ -155,30 +155,33 @@ def fetch_soil_profile(lat: float, lng: float) -> dict[str, Any] | None:
 
 
 # Geocoders drop pins on town centres, and SoilGrids masks built-up cells
-# (all-null answer, same as water). Probe ~2 km N/E/S/W before concluding
-# anything about the surroundings a farm would actually be in.
-_NEIGHBOR_OFFSET_DEG = 0.018
+# (all-null answer, same as water). Probe outward — ~2 km for towns, ~6 km
+# for large cities whose urban footprint swallows the first ring (Amritsar's
+# is ~10 km across) — before concluding anything about the surroundings a
+# farm would actually be in.
+_NEIGHBOR_OFFSETS_DEG = (0.018, 0.054)
 
 
 def _topsoil_with_fallback(lat: float, lng: float) -> dict[str, float | None]:
     """Topsoil values at the point, falling back to the nearest unmasked
-    neighbouring cell. Raises SoilGridsUnavailable only if the point query
-    itself fails; failed neighbour probes are skipped silently."""
+    neighbouring cell (nearest ring first). Raises SoilGridsUnavailable only
+    if the point query itself fails; failed neighbour probes are skipped
+    silently."""
     raw = _query_topsoil(lat, lng)
     if any(v is not None for v in raw.values()):
         return raw
-    d = _NEIGHBOR_OFFSET_DEG
-    for dlat, dlng in ((d, 0.0), (0.0, d), (-d, 0.0), (0.0, -d)):
-        try:
-            probe = _query_topsoil(lat + dlat, lng + dlng)
-        except SoilGridsUnavailable:
-            continue
-        if any(v is not None for v in probe.values()):
-            _logger.info(
-                "SoilGrids masked at (%s, %s); using neighbour (%s, %s)",
-                lat, lng, lat + dlat, lng + dlng,
-            )
-            return probe
+    for d in _NEIGHBOR_OFFSETS_DEG:
+        for dlat, dlng in ((d, 0.0), (0.0, d), (-d, 0.0), (0.0, -d)):
+            try:
+                probe = _query_topsoil(lat + dlat, lng + dlng)
+            except SoilGridsUnavailable:
+                continue
+            if any(v is not None for v in probe.values()):
+                _logger.info(
+                    "SoilGrids masked at (%s, %s); using neighbour (%s, %s)",
+                    lat, lng, lat + dlat, lng + dlng,
+                )
+                return probe
     return raw
 
 
@@ -186,7 +189,7 @@ def has_soil(lat: float, lng: float) -> bool:
     """Land-or-ocean sanity check.
 
     False only when SoilGrids *confirmed* all-null values at the point and
-    its ~2 km neighbourhood (masked town-centre cells have arable neighbours;
+    its 2–6 km neighbourhood (masked city cells have arable neighbours;
     open ocean does not). A fetch failure fails open — never lock a farmer
     out because a free API had a bad minute.
     """
