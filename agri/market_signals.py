@@ -182,6 +182,9 @@ def synthesize_farming_intelligence(
         f"Top recommended crops (AI-reranked):\n{_format_crops(top_crops)}"
         + counter_section
         + f"\n\nBackground context from web search:\n{background or '(none — rely on your own knowledge)'}"
+        + "\n\nFor each top crop, explicitly state whether the user's sowing month is "
+        + "INSIDE the crop's planting window. If outside, give the next correct planting "
+        + "window in plain language ('Plant in October-November')."
     )
     from agri.ai_client import call_ai
     return call_ai(prompt, system=_FARMING_SYSTEM, max_tokens=3500)

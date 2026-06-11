@@ -68,6 +68,25 @@ def compute_slope_pct(
     return max_diff / radius_m * 100.0
 
 
+_COMPASS_8 = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
+
+
+def compute_aspect(centre_m: float | None, neighbours_m: list[float]) -> str | None:
+    """Direction of steepest descent (N..NW). None if flat or data missing.
+
+    `neighbours_m` ordering must match `_offsets`: N, NE, E, SE, S, SW, W, NW.
+    """
+    if centre_m is None or len(neighbours_m) != 8:
+        return None
+    # Aspect = direction the slope faces = direction of MAX DOWNHILL drop
+    # from centre. (Plants exposed in that direction.)
+    drops = [centre_m - n for n in neighbours_m]
+    max_drop = max(drops)
+    if max_drop < 1.0:  # essentially flat — no meaningful aspect
+        return None
+    return _COMPASS_8[drops.index(max_drop)]
+
+
 def _drainage_class(slope_pct: float) -> str:
     if slope_pct < 1.0:
         return "flat"
@@ -79,11 +98,13 @@ def _drainage_class(slope_pct: float) -> str:
 
 
 def terrain_summary(lat: float, lng: float) -> dict[str, Any]:
-    """Returns {elevation_m, slope_pct, drainage_class}. Fail-safe defaults on API failure."""
+    """Returns {elevation_m, slope_pct, drainage_class, aspect}. Fail-safe defaults."""
     centre, neighbours = fetch_neighborhood_elevations(lat, lng)
     slope = compute_slope_pct(centre, neighbours)
+    aspect = compute_aspect(centre, neighbours)
     return {
         "elevation_m": centre,
         "slope_pct": slope,
         "drainage_class": _drainage_class(slope),
+        "aspect": aspect,
     }

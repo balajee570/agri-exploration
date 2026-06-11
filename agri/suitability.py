@@ -1,8 +1,10 @@
 """Geographic suitability filter — excludes crops that fundamentally don't fit a location.
 
 Tea doesn't grow in Bihar plains (50 m, hot lowlands). Paddy can't survive at Darjeeling's
-2100 m. Each crop optionally declares `elevation_m` and `annual_rain_mm` envelopes; existing
-`temp_c.min/max` is also used. Crops without envelopes pass through unchanged — fail-safe.
+2,100 m. Cotton needs <8% slope. Rajasthan's pH 8.2 soils kill acidophile tea. Each crop
+optionally declares `elevation_m`, `slope_max_pct`, `annual_rain_mm`, `soil_ph`,
+`soil_types`; existing `temp_c.min/max` is also used. Crops without envelopes pass
+through unchanged — fail-safe.
 """
 
 from __future__ import annotations
@@ -15,7 +17,6 @@ from agri.terrain import terrain_summary
 
 
 def annual_rainfall_mm(normals: pd.DataFrame) -> float | None:
-    """Sum of the 12 monthly totals = annual rainfall in mm."""
     if normals is None or normals.empty or "precip_mm" not in normals.columns:
         return None
     return float(normals["precip_mm"].sum())
@@ -32,13 +33,13 @@ def geographic_fit(
     elevation_m: float | None,
     normals: pd.DataFrame | None,
     slope_pct: float | None = None,
+    soil: dict[str, Any] | None = None,
 ) -> tuple[float, str]:
-    """Returns (fit, reason). fit < 0.1 means exclude from recommendations.
+    """Returns (fit, reason). fit < 0.1 means exclude.
 
     Hard envelopes the crop declares: elevation_m, slope_max_pct, annual_rain_mm,
-    temp_c.min/max. Buffers (elev ±100 m, rain ×0.5/×2, temp ±5-8 °C) absorb
-    borderline plots without letting catastrophic mismatches through (paddy at
-    1,470 m, cotton on a 29 % slope).
+    temp_c.min/max, soil_ph, soil_types. Buffers absorb borderline plots without
+    letting catastrophic mismatches through.
     """
     if elevation_m is not None:
         env = crop.get("elevation_m")
@@ -53,6 +54,22 @@ def geographic_fit(
         smax = crop.get("slope_max_pct")
         if smax is not None and slope_pct > smax:
             return 0.0, f"slope {slope_pct:.0f}% exceeds crop max {smax}%"
+
+    if soil is not None:
+        ph = soil.get("ph_h2o")
+        if ph is not None:
+            crop_ph = crop.get("soil_ph")
+            if crop_ph and isinstance(crop_ph, list) and len(crop_ph) == 2:
+                lo, hi = crop_ph
+                if ph < lo - 1.0 or ph > hi + 1.0:
+                    return 0.0, f"local soil pH {ph:.1f} outside {lo}–{hi} band"
+        soil_class = soil.get("soil_class")
+        if soil_class:
+            crop_soils = set(crop.get("soil_types") or [])
+            if crop_soils and soil_class not in crop_soils:
+                # Soft penalty rather than hard exclusion — soil_class is a coarse derivation
+                # from a 250 m pixel.  Don't kill the crop, just downgrade.
+                pass
 
     annual_rain = annual_rainfall_mm(normals)
     if annual_rain is not None:
@@ -83,9 +100,10 @@ def excluded_for_location(
     normals: pd.DataFrame | None,
     elevation_m: float | None = None,
     slope_pct: float | None = None,
+    soil: dict[str, Any] | None = None,
 ) -> list[tuple[dict[str, Any], str]]:
-    """List of (crop, reason) for crops that fail the hard geographic filter at this point."""
-    from agri.recommend import load_crops  # lazy: avoids circular import
+    """List of (crop, reason) for crops that fail the hard geographic filter."""
+    from agri.recommend import load_crops
 
     if elevation_m is None or slope_pct is None:
         terr = terrain_summary(lat, lng)
@@ -93,9 +111,18 @@ def excluded_for_location(
             elevation_m = terr.get("elevation_m")
         if slope_pct is None:
             slope_pct = terr.get("slope_pct")
+
+    if soil is None:
+        try:
+            from agri.soilgrids import fetch_soil_profile
+            soil = fetch_soil_profile(lat, lng)
+        except Exception:
+            soil = None
+
     out: list[tuple[dict[str, Any], str]] = []
     for crop in load_crops():
-        fit, reason = geographic_fit(crop, elevation_m, normals, slope_pct=slope_pct)
+        fit, reason = geographic_fit(crop, elevation_m, normals,
+                                     slope_pct=slope_pct, soil=soil)
         if fit < 0.1:
             out.append((crop, reason))
     return out

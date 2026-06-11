@@ -117,3 +117,60 @@ def climate_zone(lat: float, lng: float) -> str:
     if lat >= 17:
         return "south_central"
     return "south"
+
+
+_OVERPASS = "https://overpass-api.de/api/interpreter"
+
+
+@cached(TTL_GEOCODE)
+def nearest_mandi(lat: float, lng: float) -> dict[str, Any] | None:
+    """Closest OpenStreetMap `amenity=marketplace` within 100 km. None if absent.
+
+    Returns {distance_km, name, lat, lng}.
+    """
+    radius_m = 100_000
+    query = (
+        f"[out:json][timeout:25];"
+        f"(node['amenity'='marketplace'](around:{radius_m},{lat},{lng});"
+        f"way['amenity'='marketplace'](around:{radius_m},{lat},{lng}););"
+        f"out center 30;"
+    )
+    try:
+        resp = httpx.post(_OVERPASS, data=query.encode("utf-8"), timeout=20.0,
+                          headers={"User-Agent": "KrishiCast/1.0 (open-source)"})
+        resp.raise_for_status()
+        elements = resp.json().get("elements", [])
+    except httpx.HTTPError:
+        return None
+
+    import math as _math
+    def _dist_km(la1, lo1, la2, lo2):
+        R = 6371.0
+        p1, p2 = _math.radians(la1), _math.radians(la2)
+        dp = _math.radians(la2 - la1)
+        dl = _math.radians(lo2 - lo1)
+        a = _math.sin(dp / 2) ** 2 + _math.cos(p1) * _math.cos(p2) * _math.sin(dl / 2) ** 2
+        return 2 * R * _math.asin(_math.sqrt(a))
+
+    best = None
+    for el in elements:
+        plat = el.get("lat") or (el.get("center") or {}).get("lat")
+        plng = el.get("lon") or (el.get("center") or {}).get("lon")
+        if plat is None or plng is None:
+            continue
+        d = _dist_km(lat, lng, plat, plng)
+        name = (el.get("tags") or {}).get("name") or "marketplace"
+        if best is None or d < best["distance_km"]:
+            best = {"distance_km": round(d, 1), "name": name,
+                    "lat": plat, "lng": plng}
+    return best
+
+
+def is_on_land(lat: float, lng: float) -> bool:
+    """Coarse land/water check via SoilGrids existence.
+
+    True if a soil profile is available at this point; False otherwise.
+    Used to short-circuit recommendations for points in open water.
+    """
+    from agri.soilgrids import has_soil
+    return has_soil(lat, lng)

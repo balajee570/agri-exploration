@@ -1,0 +1,307 @@
+{
+  "paddy": {
+    "Punjab": [
+      {"name": "PR 126", "duration_days": 123, "notes": "Semi-dwarf; blast-resistant; high yield."},
+      {"name": "PR 121", "duration_days": 140, "notes": "Coarse grain; widely grown."},
+      {"name": "Basmati 1509", "duration_days": 115, "notes": "Premium aromatic; short duration."}
+    ],
+    "Haryana": [
+      {"name": "Basmati 1121", "duration_days": 145, "notes": "Long-grain Basmati export quality."},
+      {"name": "PB 1718", "duration_days": 135, "notes": "Bacterial-blight resistant."}
+    ],
+    "Bihar": [
+      {"name": "Sambha Mahsuri (BPT 5204)", "duration_days": 150, "notes": "Fine-grain; medium duration."},
+      {"name": "Rajendra Bhagwati", "duration_days": 125, "notes": "Drought-tolerant; rain-fed."}
+    ],
+    "Uttar Pradesh": [
+      {"name": "NDR 359", "duration_days": 130, "notes": "Bacterial-blight resistant."},
+      {"name": "Pant Dhan 12", "duration_days": 110, "notes": "Short duration."}
+    ],
+    "West Bengal": [
+      {"name": "Swarna (MTU 7029)", "duration_days": 145, "notes": "Most-planted variety in eastern India."},
+      {"name": "IR 36", "duration_days": 115, "notes": "Pest-tolerant short-grain."}
+    ],
+    "Andhra Pradesh": [
+      {"name": "Sona Masuri (BPT 5204)", "duration_days": 150, "notes": "Aromatic fine-grain."},
+      {"name": "MTU 1010", "duration_days": 110, "notes": "Short duration; high tillering."}
+    ],
+    "Tamil Nadu": [
+      {"name": "ADT 43", "duration_days": 115, "notes": "Short duration; widely adapted."},
+      {"name": "CO 51", "duration_days": 105, "notes": "Hybrid; high yield."}
+    ],
+    "Karnataka": [
+      {"name": "BR 2655", "duration_days": 130, "notes": "Blast tolerant."},
+      {"name": "Sona Masuri", "duration_days": 145, "notes": "Premium fine-grain."}
+    ],
+    "Odisha": [
+      {"name": "Pooja", "duration_days": 145, "notes": "Lowland; flood-tolerant."},
+      {"name": "Pratiksha", "duration_days": 115, "notes": "Drought-tolerant upland."}
+    ],
+    "Chhattisgarh": [
+      {"name": "Mahamaya", "duration_days": 135, "notes": "Coarse-grain; rain-fed."}
+    ],
+    "__default__": [
+      {"name": "Swarna (MTU 7029)", "duration_days": 145, "notes": "Widely adapted; medium duration."}
+    ]
+  },
+  "wheat": {
+    "Punjab": [
+      {"name": "HD 3086", "duration_days": 145, "notes": "Yellow & brown rust resistant."},
+      {"name": "PBW 725", "duration_days": 155, "notes": "Late-sown; high yield."}
+    ],
+    "Haryana": [
+      {"name": "HD 3226", "duration_days": 150, "notes": "Rust resistant; widely adopted."},
+      {"name": "WH 1105", "duration_days": 145, "notes": "Drought-tolerant."}
+    ],
+    "Uttar Pradesh": [
+      {"name": "DBW 187", "duration_days": 150, "notes": "Heat-tolerant; rust resistant."},
+      {"name": "HD 2967", "duration_days": 150, "notes": "Most-planted nationally."}
+    ],
+    "Madhya Pradesh": [
+      {"name": "Lok 1", "duration_days": 110, "notes": "Durum (pasta) wheat."},
+      {"name": "GW 322", "duration_days": 120, "notes": "Heat-tolerant; central plateau."}
+    ],
+    "Bihar": [
+      {"name": "HD 2967", "duration_days": 145, "notes": "Yellow-rust resistant."},
+      {"name": "DBW 187", "duration_days": 150, "notes": "Heat-tolerant late-sowing."}
+    ],
+    "Rajasthan": [
+      {"name": "Raj 4079", "duration_days": 130, "notes": "Drought-tolerant."},
+      {"name": "DBW 88", "duration_days": 130, "notes": "Restricted-irrigation suitable."}
+    ],
+    "__default__": [
+      {"name": "HD 2967", "duration_days": 150, "notes": "Widely adapted across north India."}
+    ]
+  },
+  "cotton": {
+    "Maharashtra": [
+      {"name": "Mallika BG II", "duration_days": 180, "notes": "Bollworm-tolerant Bt hybrid."},
+      {"name": "Rasi 759 BG II", "duration_days": 175, "notes": "High yield Vidarbha-suited."}
+    ],
+    "Gujarat": [
+      {"name": "RCH 659 BG II", "duration_days": 180, "notes": "Best for Saurashtra; salt-tolerant."},
+      {"name": "Mallika BG II", "duration_days": 180, "notes": "Widely grown."}
+    ],
+    "Telangana": [
+      {"name": "ATM BG II", "duration_days": 170, "notes": "Adaptive to drought."}
+    ],
+    "Andhra Pradesh": [
+      {"name": "Bunny BG II", "duration_days": 170, "notes": "Sucking-pest tolerant."}
+    ],
+    "Punjab": [
+      {"name": "PBW Cot 25", "duration_days": 165, "notes": "Compact; ideal for Northern zone."}
+    ],
+    "Haryana": [
+      {"name": "F 2228", "duration_days": 165, "notes": "Whitefly-tolerant."}
+    ],
+    "__default__": [
+      {"name": "Mallika BG II", "duration_days": 180, "notes": "Widely adapted Bt hybrid."}
+    ]
+  },
+  "maize_kharif": {
+    "Karnataka": [
+      {"name": "NK 6240", "duration_days": 110, "notes": "Single-cross hybrid; high yield."},
+      {"name": "HQPM 1", "duration_days": 95, "notes": "Quality protein maize."}
+    ],
+    "Bihar": [
+      {"name": "Suwan", "duration_days": 95, "notes": "Composite; rain-fed."},
+      {"name": "NK 30", "duration_days": 100, "notes": "Stress tolerant."}
+    ],
+    "Andhra Pradesh": [
+      {"name": "DHM 117", "duration_days": 110, "notes": "Single-cross hybrid."}
+    ],
+    "__default__": [
+      {"name": "Pioneer 30V92", "duration_days": 100, "notes": "Widely adapted single-cross hybrid."}
+    ]
+  },
+  "chickpea": {
+    "Madhya Pradesh": [
+      {"name": "JG 11", "duration_days": 95, "notes": "Wilt-resistant; popular desi."},
+      {"name": "JG 14", "duration_days": 100, "notes": "Bold-seeded; processing demand."}
+    ],
+    "Rajasthan": [
+      {"name": "GNG 469", "duration_days": 130, "notes": "Drought-tolerant desi."}
+    ],
+    "Maharashtra": [
+      {"name": "Vijay", "duration_days": 100, "notes": "Bold seed; high yield."}
+    ],
+    "__default__": [
+      {"name": "JG 11", "duration_days": 95, "notes": "Wilt-resistant desi chickpea."}
+    ]
+  },
+  "soybean": {
+    "Madhya Pradesh": [
+      {"name": "JS 95-60", "duration_days": 95, "notes": "Yellow-seeded; widely grown."},
+      {"name": "JS 20-29", "duration_days": 95, "notes": "Yellow mosaic resistant."}
+    ],
+    "Maharashtra": [
+      {"name": "MAUS 71", "duration_days": 100, "notes": "Bold-seeded; high oil."}
+    ],
+    "__default__": [
+      {"name": "JS 95-60", "duration_days": 95, "notes": "Widely adapted yellow-seeded variety."}
+    ]
+  },
+  "groundnut": {
+    "Gujarat": [
+      {"name": "GG 20", "duration_days": 110, "notes": "Spanish bunch; popular Saurashtra."},
+      {"name": "GJG HPS 1", "duration_days": 115, "notes": "Large-seeded export grade."}
+    ],
+    "Andhra Pradesh": [
+      {"name": "K 6", "duration_days": 110, "notes": "Drought-tolerant Anantapur staple."}
+    ],
+    "Tamil Nadu": [
+      {"name": "TMV 7", "duration_days": 105, "notes": "Spanish bunch; rainfed."}
+    ],
+    "__default__": [
+      {"name": "TAG 24", "duration_days": 105, "notes": "Widely adapted bunch type."}
+    ]
+  },
+  "sugarcane": {
+    "Uttar Pradesh": [
+      {"name": "Co 0238", "duration_days": 330, "notes": "Most-planted; high sucrose."},
+      {"name": "Co 98014", "duration_days": 360, "notes": "Late-maturing; ratoon-friendly."}
+    ],
+    "Maharashtra": [
+      {"name": "Co 86032", "duration_days": 360, "notes": "Pre-season; suited to ratooning."}
+    ],
+    "Karnataka": [
+      {"name": "VSI 434", "duration_days": 330, "notes": "Drought-tolerant."}
+    ],
+    "Tamil Nadu": [
+      {"name": "Co 86249", "duration_days": 330, "notes": "Mid-late; high recovery."}
+    ],
+    "__default__": [
+      {"name": "Co 0238", "duration_days": 330, "notes": "Most-planted high-sucrose variety."}
+    ]
+  },
+  "potato": {
+    "Uttar Pradesh": [
+      {"name": "Kufri Bahar", "duration_days": 90, "notes": "Late-blight tolerant; large tubers."},
+      {"name": "Kufri Chipsona-1", "duration_days": 95, "notes": "Processing grade."}
+    ],
+    "West Bengal": [
+      {"name": "Kufri Jyoti", "duration_days": 100, "notes": "Hill-grown; table purpose."}
+    ],
+    "Punjab": [
+      {"name": "Kufri Pukhraj", "duration_days": 90, "notes": "Most-grown nationally."}
+    ],
+    "Himachal Pradesh": [
+      {"name": "Kufri Girdhari", "duration_days": 110, "notes": "Hill processing variety."}
+    ],
+    "__default__": [
+      {"name": "Kufri Pukhraj", "duration_days": 90, "notes": "Widely adapted table variety."}
+    ]
+  },
+  "mustard": {
+    "Rajasthan": [
+      {"name": "RH 749", "duration_days": 130, "notes": "Drought-tolerant; oil content 41%."},
+      {"name": "Pusa Bold", "duration_days": 130, "notes": "Bold-seeded; widely grown."}
+    ],
+    "Haryana": [
+      {"name": "Giriraj", "duration_days": 130, "notes": "High-oil yield."}
+    ],
+    "Uttar Pradesh": [
+      {"name": "Varuna", "duration_days": 130, "notes": "Traditional widely-adapted variety."}
+    ],
+    "__default__": [
+      {"name": "Pusa Bold", "duration_days": 130, "notes": "Widely adapted bold-seeded mustard."}
+    ]
+  },
+  "tomato": {
+    "Karnataka": [
+      {"name": "Arka Rakshak", "duration_days": 110, "notes": "Triple-disease resistant hybrid."},
+      {"name": "Pusa Ruby", "duration_days": 100, "notes": "Open-pollinated; firm fruit."}
+    ],
+    "Maharashtra": [
+      {"name": "Abhinav F1", "duration_days": 100, "notes": "Hybrid; long shelf life."}
+    ],
+    "Andhra Pradesh": [
+      {"name": "Arka Vikas", "duration_days": 100, "notes": "Heat-tolerant for summer."}
+    ],
+    "__default__": [
+      {"name": "Arka Rakshak", "duration_days": 110, "notes": "Triple-disease resistant hybrid."}
+    ]
+  },
+  "onion_rabi": {
+    "Maharashtra": [
+      {"name": "Bhima Shakti", "duration_days": 120, "notes": "Long-storage; export-friendly."},
+      {"name": "N 53", "duration_days": 130, "notes": "Nashik standard variety."}
+    ],
+    "Karnataka": [
+      {"name": "Arka Niketan", "duration_days": 130, "notes": "Storage-friendly."}
+    ],
+    "__default__": [
+      {"name": "Bhima Shakti", "duration_days": 120, "notes": "Long-storage variety."}
+    ]
+  },
+  "banana": {
+    "Tamil Nadu": [
+      {"name": "Grand Naine (G9)", "duration_days": 365, "notes": "Tissue-cultured Cavendish; high yield."},
+      {"name": "Rasthali", "duration_days": 390, "notes": "Local table banana."}
+    ],
+    "Kerala": [
+      {"name": "Nendran", "duration_days": 360, "notes": "Cooking variety; ripens uniformly."}
+    ],
+    "Maharashtra": [
+      {"name": "Grand Naine (G9)", "duration_days": 365, "notes": "Most planted Cavendish."}
+    ],
+    "__default__": [
+      {"name": "Grand Naine (G9)", "duration_days": 365, "notes": "Tissue-cultured Cavendish."}
+    ]
+  },
+  "mango": {
+    "Uttar Pradesh": [
+      {"name": "Dussehri", "duration_days": 2920, "notes": "Premium; Lucknow region."},
+      {"name": "Langra", "duration_days": 2920, "notes": "Pulp variety."}
+    ],
+    "Maharashtra": [
+      {"name": "Alphonso", "duration_days": 2920, "notes": "Premium; Konkan region."}
+    ],
+    "Karnataka": [
+      {"name": "Banganapalli", "duration_days": 2920, "notes": "Widely cultivated; large fruit."}
+    ],
+    "Andhra Pradesh": [
+      {"name": "Banganapalli", "duration_days": 2920, "notes": "Most-planted in AP."}
+    ],
+    "__default__": [
+      {"name": "Banganapalli", "duration_days": 2920, "notes": "Widely adapted commercial mango."}
+    ]
+  },
+  "tea": {
+    "Assam": [
+      {"name": "TV 23", "duration_days": 1825, "notes": "Assam type; high yield."}
+    ],
+    "West Bengal": [
+      {"name": "Darjeeling clones (B 157)", "duration_days": 1825, "notes": "China type; aromatic."}
+    ],
+    "Kerala": [
+      {"name": "UPASI 9", "duration_days": 1825, "notes": "High-elevation Nilgiris-style."}
+    ],
+    "__default__": [
+      {"name": "UPASI 9", "duration_days": 1825, "notes": "Widely adapted south Indian clone."}
+    ]
+  },
+  "coffee": {
+    "Karnataka": [
+      {"name": "Cauvery (Catimor)", "duration_days": 1825, "notes": "Arabica; rust-resistant."},
+      {"name": "Sln 9", "duration_days": 1825, "notes": "Robusta; high yield."}
+    ],
+    "Kerala": [
+      {"name": "Sln 9 Robusta", "duration_days": 1825, "notes": "Adapted to lower elevations."}
+    ],
+    "__default__": [
+      {"name": "Cauvery", "duration_days": 1825, "notes": "Arabica; widely adapted."}
+    ]
+  },
+  "cardamom": {
+    "Kerala": [
+      {"name": "Njallani Green Gold", "duration_days": 1095, "notes": "Idukki clone; high yield."}
+    ],
+    "Karnataka": [
+      {"name": "Mudigere 1", "duration_days": 1095, "notes": "Western Ghats adapted."}
+    ],
+    "__default__": [
+      {"name": "Mudigere 1", "duration_days": 1095, "notes": "Widely adapted highland clone."}
+    ]
+  }
+}

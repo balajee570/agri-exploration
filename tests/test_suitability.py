@@ -114,3 +114,44 @@ def test_annual_helpers():
     df = _normals(annual_mean_temp_c=20.0, annual_rain_mm=1440)
     assert annual_mean_temp_c(df) == pytest.approx(20.0)
     assert annual_rainfall_mm(df) == pytest.approx(1440.0)
+
+
+# ---- Soil pH gate -----------------------------------------------------------
+
+def test_tea_excluded_on_alkaline_soil():
+    """Tea wants pH 4.5–5.5; pH 8.5 must reject."""
+    tea = crops_by_id()["tea"]
+    fit, reason = geographic_fit(
+        tea, elevation_m=1500, normals=None, slope_pct=20,
+        soil={"ph_h2o": 8.5, "soil_class": "loam"},
+    )
+    assert fit == 0.0
+    assert "ph" in reason.lower()
+
+
+def test_chickpea_passes_on_neutral_soil():
+    """Chickpea's pH 6.0–8.0 → 7.0 should pass cleanly."""
+    chickpea = crops_by_id()["chickpea"]
+    fit, _ = geographic_fit(
+        chickpea, elevation_m=200, normals=None, slope_pct=2,
+        soil={"ph_h2o": 7.0, "soil_class": "loam"},
+    )
+    assert fit == 1.0
+
+
+def test_missing_soil_data_is_fail_safe():
+    """No soil dict → skip soil check entirely, do not block."""
+    tea = crops_by_id()["tea"]
+    fit, _ = geographic_fit(tea, elevation_m=1500, normals=None,
+                            slope_pct=20, soil=None)
+    assert fit == 1.0
+
+
+def test_soil_ph_within_buffer_passes():
+    """1.0 unit either side of the catalog band is tolerated (250m pixel imprecision)."""
+    coffee = crops_by_id()["coffee"]   # soil_ph [6.0, 6.5]
+    fit, _ = geographic_fit(
+        coffee, elevation_m=1000, normals=None, slope_pct=15,
+        soil={"ph_h2o": 5.2, "soil_class": "loam"},  # within 1.0 unit of 6.0
+    )
+    assert fit == 1.0
